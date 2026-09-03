@@ -33,7 +33,7 @@ const Header = ({ reloadGame, pauseGame, isPaused, score }: HeaderProps) => {
           text={score.toString()}
           color={colors.primary}
           styleProfile={"bigger1"}
-          fontWeight={fontWeight[600]}
+          fontWeight={fontWeight[700]}
         />
       </View>
       <Pressable onPress={pauseGame}>

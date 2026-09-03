@@ -9,10 +9,10 @@ export type Coordinate = {
 };
 
 export enum Direction {
-  Right,
-  Left,
-  Up,
-  Down,
+  Right = "Right",
+  Left = "Left",
+  Up = "Up",
+  Down = "Down",
 }
 
 export type Boundary = {

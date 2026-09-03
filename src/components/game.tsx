@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useState } from "react";
+import { Fragment, useCallback, useEffect, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -9,11 +9,13 @@ import { colors } from "@/constants";
 //import types
 import { Coordinate, Direction, type GestureEventType } from "@/types/game";
 
-//import game config
+//import game configs
 import {
   getIntialFoodPosition,
   getIntialSnakePosition,
+  MAX_BUFFERED_DIRECTIONS,
   SCORE_INCREMENT,
+  SWIPE_MIN_DISTANCE,
   TICK_MS,
 } from "@/features/game/config";
 
@@ -26,7 +28,13 @@ import Snake from "./snake";
 import { useGameBoard } from "@/hooks";
 
 //import utility functions
-import { checkEatsFood, checkGameOver, getRandomFoodPosition } from "@/utils";
+import {
+  checkEatsFood,
+  checkGameOver,
+  checkOppositeDirection,
+  getRandomFoodPosition,
+  getSnakeNextHeadPosition,
+} from "@/utils";
 
 const Game = () => {
   //hooks
@@ -39,75 +47,78 @@ const Game = () => {
   const [isGameOver, setIsGameOver] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [score, setScore] = useState<number>(0);
+  const [tickMs, setTickMs] = useState<number>(TICK_MS);
 
-  //function to move the snake in the current direction
-  const moveSnake = (): void => {
-    const snakeHead = snake[0];
-    const newHead = { ...snakeHead };
+  //refs
+  const directionRef = useRef<Direction>(Direction.Right);
+  const directionQueueRef = useRef<Direction[]>([]);
 
-    if (checkGameOver(snakeHead, board.bounds)) {
+  //function to queue the directions to execute them in next ticks
+  const queueDirection = (nextDirection: Direction): void => {
+    const queue = directionQueueRef.current;
+
+    const lastQueuedDirection =
+      queue.length > 0 ? queue[queue.length - 1] : directionRef.current;
+
+    if (
+      nextDirection === lastQueuedDirection ||
+      checkOppositeDirection(lastQueuedDirection, nextDirection)
+    ) {
+      return;
+    }
+
+    if (queue.length >= MAX_BUFFERED_DIRECTIONS) {
+      return;
+    }
+
+    queue.push(nextDirection);
+  };
+
+  //function to move the snake in the requested/queued direction
+  const moveSnake = useCallback((): void => {
+    const queuedDirection = directionQueueRef.current.shift();
+
+    const nextDirection = queuedDirection ?? directionRef.current;
+
+    directionRef.current = nextDirection;
+    setDirection((current) =>
+      current === nextDirection ? current : nextDirection,
+    );
+
+    const newHead = getSnakeNextHeadPosition({ ...snake[0] }, nextDirection);
+
+    if (checkGameOver(snake, board.bounds)) {
       setIsGameOver(true);
       return;
     }
 
-    switch (direction) {
-      case Direction.Up:
-        newHead.y -= 1;
-        break;
-      case Direction.Down:
-        newHead.y += 1;
-        break;
-      case Direction.Left:
-        newHead.x -= 1;
-        break;
-      case Direction.Right:
-        newHead.x += 1;
-        break;
-      default:
-        break;
-    }
-
-    //if eats food, grow the snake
-    if (checkEatsFood(newHead, food, 2)) {
+    //if eats food, grow the snake, generate new food position, increment score and increase speed of the snake
+    const snakeAteFood = checkEatsFood(newHead, food, 2);
+    if (snakeAteFood) {
       setFood(getRandomFoodPosition(board.bounds.xMax, board.bounds.yMax));
       setSnake((prev) => [newHead, ...prev]);
       setScore((prevScore) => prevScore + SCORE_INCREMENT);
+      setTickMs((prev) => Math.max(0, prev - 10));
       return;
     }
 
     setSnake((prev) => [newHead, ...prev.slice(0, -1)]);
-  };
+  }, [snake, food, direction, board.bounds]);
 
   //function to handle the gesture update event
   const handleGesture = (event: GestureEventType): void => {
     const { translationX, translationY } = event;
-    const xAxis = Math.abs(translationX) > Math.abs(translationY);
 
-    if (xAxis) {
-      if (translationX > 0) {
-        //move right
-        setDirection((currDir) =>
-          currDir !== Direction.Left ? Direction.Right : currDir,
-        );
-      } else {
-        //move left
-        setDirection((currDir) =>
-          currDir !== Direction.Right ? Direction.Left : currDir,
-        );
-      }
-    } else {
-      if (translationY > 0) {
-        //move down
-        setDirection((currDir) =>
-          currDir !== Direction.Up ? Direction.Down : currDir,
-        );
-      } else {
-        //move up
-        setDirection((currDir) =>
-          currDir !== Direction.Down ? Direction.Up : currDir,
-        );
-      }
-    }
+    const nextDirection =
+      Math.abs(translationX) > Math.abs(translationY)
+        ? translationX > 0
+          ? Direction.Right
+          : Direction.Left
+        : translationY > 0
+          ? Direction.Down
+          : Direction.Up;
+
+    queueDirection(nextDirection);
   };
 
   //function to play/pause the game
@@ -117,24 +128,29 @@ const Game = () => {
 
   //function to restart the game
   const restartGame = (): void => {
+    directionRef.current = Direction.Right;
+    directionQueueRef.current = [];
+
     setSnake(getIntialSnakePosition());
     setFood(getIntialFoodPosition());
-    setScore(0);
     setDirection(Direction.Right);
+    setScore(0);
+    setTickMs(TICK_MS);
     setIsGameOver(false);
     setIsPaused(false);
   };
 
-  const pan = Gesture.Pan().runOnJS(true).onEnd(handleGesture);
+  const pan = Gesture.Pan()
+    .minDistance(SWIPE_MIN_DISTANCE)
+    .runOnJS(true)
+    .onEnd(handleGesture);
 
   useEffect(() => {
     if (!board.ready || isGameOver || isPaused) return;
 
-    const intervalId = setInterval(() => {
-      moveSnake();
-    }, TICK_MS);
+    const intervalId = setInterval(moveSnake, tickMs);
     return () => clearInterval(intervalId);
-  }, [snake, isGameOver, board.ready, isPaused]);
+  }, [snake, isGameOver, board.ready, isPaused, moveSnake]);
 
   return (
     <GestureDetector gesture={pan}>
@@ -148,7 +164,7 @@ const Game = () => {
         <View style={styles.boundaries} onLayout={board.onLayout}>
           {board.ready && (
             <Fragment>
-              <Snake snake={snake} />
+              <Snake snake={snake} direction={direction} />
               <Food x={food.x} y={food.y} />
             </Fragment>
           )}
@@ -170,6 +186,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
     marginHorizontal: 15,
     marginTop: 5,
+    overflow: "hidden",
     borderBottomLeftRadius: 30,
     borderBottomRightRadius: 30,
   },

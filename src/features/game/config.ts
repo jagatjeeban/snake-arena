@@ -2,10 +2,12 @@
 import { Boundary, Coordinate } from "@/types/game";
 
 //CONSTANTS
-const TICK_RATE = 20;
+const TICK_RATE = 5;
 const TICK_MS = 1000 / TICK_RATE;
 const SCORE_INCREMENT = 5;
-const CELL_SIZE = 10;
+const CELL_SIZE = 15;
+const SWIPE_MIN_DISTANCE = 12;
+const MAX_BUFFERED_DIRECTIONS = 1;
 
 const getIntialSnakePosition = (): Coordinate[] => [{ x: 3, y: 3 }];
 const getIntialFoodPosition = (): Coordinate => ({ x: 5, y: 20 });
@@ -21,7 +23,9 @@ export {
   getDefaultBoundary,
   getIntialFoodPosition,
   getIntialSnakePosition,
+  MAX_BUFFERED_DIRECTIONS,
   SCORE_INCREMENT,
+  SWIPE_MIN_DISTANCE,
   TICK_MS,
   TICK_RATE,
 };
