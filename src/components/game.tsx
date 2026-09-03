@@ -164,7 +164,7 @@ const Game = () => {
         <View style={styles.boundaries} onLayout={board.onLayout}>
           {board.ready && (
             <Fragment>
-              <Snake snake={snake} direction={direction} />
+              <Snake snake={snake} tickMs={tickMs} />
               <Food x={food.x} y={food.y} />
             </Fragment>
           )}

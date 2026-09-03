@@ -1,6 +1,6 @@
-import { Coordinate, Direction } from "./game";
+import { Coordinate } from "./game";
 
 export type SnakeProps = {
   snake: Coordinate[];
-  direction: Direction;
+  tickMs: number;
 };
