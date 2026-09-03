@@ -1,5 +1,5 @@
-import { useEffect } from "react";
-import { StyleSheet } from "react-native";
+import { Fragment, useEffect } from "react";
+import { StyleSheet, View, ViewStyle } from "react-native";
 import Animated, {
   Easing,
   useAnimatedStyle,
@@ -11,19 +11,27 @@ import Animated, {
 import { colors } from "@/constants";
 
 //import game configs
-import { CELL_SIZE } from "@/features/game/config";
+import { ANIMATION_OVERLAP_MS, CELL_SIZE } from "@/features/game/config";
 
 //import types
+import { Direction } from "@/types/game";
 import type { SnakeSegmentProps } from "@/types/snake-segment";
 
-const SnakeSegment = ({ segment, tickMs }: SnakeSegmentProps) => {
+const SnakeSegment = ({
+  segment,
+  index,
+  tickMs,
+  direction,
+}: SnakeSegmentProps) => {
   //shared values
-  const translateX = useSharedValue(segment.x * CELL_SIZE);
-  const translateY = useSharedValue(segment.y * CELL_SIZE);
+  const translateX = useSharedValue<number>(segment.x * CELL_SIZE);
+  const translateY = useSharedValue<number>(segment.y * CELL_SIZE);
+
+  const xAxis = direction === Direction.Left || direction === Direction.Right;
 
   useEffect(() => {
     const animation = {
-      duration: tickMs,
+      duration: tickMs + ANIMATION_OVERLAP_MS,
       easing: Easing.linear,
     };
 
@@ -38,7 +46,34 @@ const SnakeSegment = ({ segment, tickMs }: SnakeSegmentProps) => {
     ],
   }));
 
-  return <Animated.View style={[styles.segment, animatedStyle]} />;
+  const snakeEyeDirection: ViewStyle = {
+    flexDirection: xAxis ? "column" : "row",
+    alignItems: xAxis
+      ? direction === Direction.Left
+        ? "flex-start"
+        : "flex-end"
+      : direction === Direction.Up
+        ? "flex-start"
+        : "flex-end",
+  };
+  const margin = 3;
+  const snakeEyeMargin: ViewStyle = {
+    marginTop: direction === Direction.Up ? margin : undefined,
+    marginLeft: direction === Direction.Left ? margin : undefined,
+    marginRight: direction === Direction.Right ? margin : undefined,
+    marginBottom: direction === Direction.Down ? margin : undefined,
+  };
+
+  return (
+    <Animated.View style={[styles.segment, snakeEyeDirection, animatedStyle]}>
+      {index === 0 && (
+        <Fragment>
+          <View style={[styles.eye, snakeEyeMargin]} />
+          <View style={[styles.eye, snakeEyeMargin]} />
+        </Fragment>
+      )}
+    </Animated.View>
+  );
 };
 
 export default SnakeSegment;
@@ -46,11 +81,18 @@ export default SnakeSegment;
 const styles = StyleSheet.create({
   segment: {
     position: "absolute",
+    justifyContent: "space-evenly",
     left: 0,
     top: 0,
-    width: CELL_SIZE,
-    height: CELL_SIZE,
-    borderRadius: CELL_SIZE / 2,
+    width: CELL_SIZE + 5,
+    height: CELL_SIZE + 5,
+    borderRadius: (CELL_SIZE + 5) / 2,
     backgroundColor: colors.primary,
+  },
+  eye: {
+    backgroundColor: colors.background,
+    width: 3,
+    height: 3,
+    borderRadius: 1.5,
   },
 });

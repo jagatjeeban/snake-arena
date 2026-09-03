@@ -1,7 +1,9 @@
 //import types
-import { Coordinate } from "./game";
+import { Coordinate, Direction } from "./game";
 
 export type SnakeSegmentProps = {
   segment: Coordinate;
   tickMs: number;
+  index: number;
+  direction: Direction;
 };

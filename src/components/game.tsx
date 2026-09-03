@@ -1,4 +1,4 @@
-import { Fragment, useCallback, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useEffectEvent, useRef, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -14,9 +14,11 @@ import {
   getIntialFoodPosition,
   getIntialSnakePosition,
   MAX_BUFFERED_DIRECTIONS,
+  MIN_TICK_MS,
   SCORE_INCREMENT,
   SWIPE_MIN_DISTANCE,
   TICK_MS,
+  TICK_MS_DECREMENT,
 } from "@/features/game/config";
 
 //import components
@@ -75,7 +77,7 @@ const Game = () => {
   };
 
   //function to move the snake in the requested/queued direction
-  const moveSnake = useCallback((): void => {
+  const moveSnake = useEffectEvent((): void => {
     const queuedDirection = directionQueueRef.current.shift();
 
     const nextDirection = queuedDirection ?? directionRef.current;
@@ -98,12 +100,12 @@ const Game = () => {
       setFood(getRandomFoodPosition(board.bounds.xMax, board.bounds.yMax));
       setSnake((prev) => [newHead, ...prev]);
       setScore((prevScore) => prevScore + SCORE_INCREMENT);
-      setTickMs((prev) => Math.max(0, prev - 10));
+      setTickMs((prev) => Math.max(MIN_TICK_MS, prev - TICK_MS_DECREMENT));
       return;
     }
 
     setSnake((prev) => [newHead, ...prev.slice(0, -1)]);
-  }, [snake, food, direction, board.bounds]);
+  });
 
   //function to handle the gesture update event
   const handleGesture = (event: GestureEventType): void => {
@@ -148,9 +150,11 @@ const Game = () => {
   useEffect(() => {
     if (!board.ready || isGameOver || isPaused) return;
 
-    const intervalId = setInterval(moveSnake, tickMs);
+    const intervalId = setInterval(() => {
+      moveSnake();
+    }, tickMs);
     return () => clearInterval(intervalId);
-  }, [snake, isGameOver, board.ready, isPaused, moveSnake]);
+  }, [isGameOver, board.ready, isPaused, tickMs]);
 
   return (
     <GestureDetector gesture={pan}>
@@ -164,7 +168,7 @@ const Game = () => {
         <View style={styles.boundaries} onLayout={board.onLayout}>
           {board.ready && (
             <Fragment>
-              <Snake snake={snake} tickMs={tickMs} />
+              <Snake snake={snake} tickMs={tickMs} direction={direction} />
               <Food x={food.x} y={food.y} />
             </Fragment>
           )}
