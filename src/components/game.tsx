@@ -11,14 +11,14 @@ import { Coordinate, Direction, type GestureEventType } from "@/types/game";
 
 //import game configs
 import {
-  getIntialFoodPosition,
-  getIntialSnakePosition,
+  DIFFICULTY_CONFIGS,
+  FOOD_AREA,
+  getInitialFoodPosition,
+  getInitialSnakePosition,
   MAX_BUFFERED_DIRECTIONS,
   MIN_TICK_MS,
   SCORE_INCREMENT,
   SWIPE_MIN_DISTANCE,
-  TICK_MS,
-  TICK_MS_DECREMENT,
 } from "@/features/game/config";
 
 //import components
@@ -42,18 +42,22 @@ const Game = () => {
   //hooks
   const board = useGameBoard();
 
+  //variables
+  const difficulty = DIFFICULTY_CONFIGS.normal;
+
   //states
   const [direction, setDirection] = useState<Direction>(Direction.Right);
-  const [snake, setSnake] = useState<Coordinate[]>(getIntialSnakePosition);
-  const [food, setFood] = useState<Coordinate>(getIntialFoodPosition);
+  const [snake, setSnake] = useState<Coordinate[]>(getInitialSnakePosition);
+  const [food, setFood] = useState<Coordinate>(getInitialFoodPosition);
   const [isGameOver, setIsGameOver] = useState<boolean>(false);
   const [isPaused, setIsPaused] = useState<boolean>(false);
   const [score, setScore] = useState<number>(0);
-  const [tickMs, setTickMs] = useState<number>(TICK_MS);
+  const [tickMs, setTickMs] = useState<number>(difficulty.initialTickMs);
 
   //refs
   const directionRef = useRef<Direction>(Direction.Right);
   const directionQueueRef = useRef<Direction[]>([]);
+  const tickMsDecrementRef = useRef<number>(difficulty.initialTickMsDecrement);
 
   //function to queue the directions to execute them in next ticks
   const queueDirection = (nextDirection: Direction): void => {
@@ -68,7 +72,6 @@ const Game = () => {
     ) {
       return;
     }
-
     if (queue.length >= MAX_BUFFERED_DIRECTIONS) {
       return;
     }
@@ -79,7 +82,6 @@ const Game = () => {
   //function to move the snake in the requested/queued direction
   const moveSnake = useEffectEvent((): void => {
     const queuedDirection = directionQueueRef.current.shift();
-
     const nextDirection = queuedDirection ?? directionRef.current;
 
     directionRef.current = nextDirection;
@@ -88,23 +90,36 @@ const Game = () => {
     );
 
     const newHead = getSnakeNextHeadPosition({ ...snake[0] }, nextDirection);
+    const snakeAteFood = checkEatsFood(newHead, food, FOOD_AREA);
+    const newSnake = snakeAteFood
+      ? [newHead, ...snake]
+      : [newHead, ...snake.slice(0, -1)];
 
-    if (checkGameOver(snake, board.bounds)) {
+    if (checkGameOver(newSnake, board.bounds)) {
       setIsGameOver(true);
       return;
     }
 
     //if eats food, grow the snake, generate new food position, increment score and increase speed of the snake
-    const snakeAteFood = checkEatsFood(newHead, food, 2);
     if (snakeAteFood) {
-      setFood(getRandomFoodPosition(board.bounds.xMax, board.bounds.yMax));
-      setSnake((prev) => [newHead, ...prev]);
+      const decrement = tickMsDecrementRef.current;
+      const newFoodPosition = getRandomFoodPosition(
+        board.bounds.xMax,
+        board.bounds.yMax,
+        newSnake,
+      );
+
+      setFood(newFoodPosition);
+      setSnake(newSnake);
       setScore((prevScore) => prevScore + SCORE_INCREMENT);
-      setTickMs((prev) => Math.max(MIN_TICK_MS, prev - TICK_MS_DECREMENT));
+      if (tickMs > MIN_TICK_MS) {
+        setTickMs((prev) => Math.max(MIN_TICK_MS, prev - decrement));
+        tickMsDecrementRef.current = Math.max(0, decrement - 1);
+      }
       return;
     }
 
-    setSnake((prev) => [newHead, ...prev.slice(0, -1)]);
+    setSnake(newSnake);
   });
 
   //function to handle the gesture update event
@@ -132,12 +147,13 @@ const Game = () => {
   const restartGame = (): void => {
     directionRef.current = Direction.Right;
     directionQueueRef.current = [];
+    tickMsDecrementRef.current = difficulty.initialTickMsDecrement;
 
-    setSnake(getIntialSnakePosition());
-    setFood(getIntialFoodPosition());
+    setSnake(getInitialSnakePosition());
+    setFood(getInitialFoodPosition());
     setDirection(Direction.Right);
     setScore(0);
-    setTickMs(TICK_MS);
+    setTickMs(difficulty.initialTickMs);
     setIsGameOver(false);
     setIsPaused(false);
   };

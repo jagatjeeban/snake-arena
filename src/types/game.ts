@@ -21,3 +21,12 @@ export type Boundary = {
   yMin: number;
   yMax: number;
 };
+
+export type DifficultyLevel = "easy" | "normal" | "hard";
+
+export type DifficultyConfig = {
+  initialTickMs: number;
+  minimumTickMs: number;
+  initialTickMsDecrement: number;
+  scoreIncrement: number;
+};

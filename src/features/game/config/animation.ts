@@ -1,0 +1,1 @@
+export const ANIMATION_OVERLAP_MS = 1000 / 60;

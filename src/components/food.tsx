@@ -4,7 +4,7 @@ import { StyleSheet } from "react-native";
 import { Coordinate } from "@/types/game";
 
 //import game config
-import { CELL_SIZE } from "@/features/game/config";
+import { CELL_SIZE, FOOD_SIZE } from "@/features/game/config";
 
 //import components
 import TextComponent from "./text-component";
@@ -27,8 +27,8 @@ export default Food;
 const styles = StyleSheet.create({
   food: {
     position: "absolute",
-    width: 20,
-    height: 20,
+    width: FOOD_SIZE,
+    height: FOOD_SIZE,
     borderRadius: 10,
   },
 });

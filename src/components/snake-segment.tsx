@@ -11,7 +11,11 @@ import Animated, {
 import { colors } from "@/constants";
 
 //import game configs
-import { ANIMATION_OVERLAP_MS, CELL_SIZE } from "@/features/game/config";
+import {
+  ANIMATION_OVERLAP_MS,
+  CELL_SIZE,
+  SNAKE_SEGMENT_SIZE,
+} from "@/features/game/config";
 
 //import types
 import { Direction } from "@/types/game";
@@ -84,9 +88,9 @@ const styles = StyleSheet.create({
     justifyContent: "space-evenly",
     left: 0,
     top: 0,
-    width: CELL_SIZE + 5,
-    height: CELL_SIZE + 5,
-    borderRadius: (CELL_SIZE + 5) / 2,
+    width: SNAKE_SEGMENT_SIZE,
+    height: SNAKE_SEGMENT_SIZE,
+    borderRadius: SNAKE_SEGMENT_SIZE / 2,
     backgroundColor: colors.primary,
   },
   eye: {
