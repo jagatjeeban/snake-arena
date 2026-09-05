@@ -16,8 +16,6 @@ import {
   getInitialFoodPosition,
   getInitialSnakePosition,
   MAX_BUFFERED_DIRECTIONS,
-  MIN_TICK_MS,
-  SCORE_INCREMENT,
   SWIPE_MIN_DISTANCE,
 } from "@/features/game/config";
 
@@ -43,7 +41,7 @@ const Game = () => {
   const board = useGameBoard();
 
   //variables
-  const difficulty = DIFFICULTY_CONFIGS.normal;
+  const difficulty = DIFFICULTY_CONFIGS.hard;
 
   //states
   const [direction, setDirection] = useState<Direction>(Direction.Right);
@@ -111,9 +109,11 @@ const Game = () => {
 
       setFood(newFoodPosition);
       setSnake(newSnake);
-      setScore((prevScore) => prevScore + SCORE_INCREMENT);
-      if (tickMs > MIN_TICK_MS) {
-        setTickMs((prev) => Math.max(MIN_TICK_MS, prev - decrement));
+      setScore((prevScore) => prevScore + difficulty.scoreIncrement);
+      if (tickMs > difficulty.minimumTickMs) {
+        setTickMs((prev) =>
+          Math.max(difficulty.minimumTickMs, prev - decrement),
+        );
         tickMsDecrementRef.current = Math.max(0, decrement - 1);
       }
       return;
