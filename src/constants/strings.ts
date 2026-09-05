@@ -1,3 +1,1 @@
-const strings = {} as const;
-
-export default strings;
+export const strings = {} as const;

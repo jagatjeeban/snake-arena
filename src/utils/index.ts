@@ -1,15 +1,6 @@
-import { checkEatsFood } from "./check-eats-food";
-import { checkGameOver } from "./check-game-over";
-import { checkOppositeDirection } from "./check-opposite-direction";
-import { getRandomFoodPosition } from "./get-random-food-position";
-import { getSnakeNextHeadPosition } from "./get-snake-next-head-position";
-import { getTickMsDecrement } from "./get-tickms-decrement";
-
-export {
-  checkEatsFood,
-  checkGameOver,
-  checkOppositeDirection,
-  getRandomFoodPosition,
-  getSnakeNextHeadPosition,
-  getTickMsDecrement,
-};
+export * from "./check-eats-food";
+export * from "./check-game-over";
+export * from "./check-opposite-direction";
+export * from "./get-random-food-position";
+export * from "./get-snake-next-head-position";
+export * from "./get-tickms-decrement";

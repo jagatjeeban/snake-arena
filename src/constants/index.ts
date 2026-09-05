@@ -1,6 +1,4 @@
-import colors from "./colors";
-import fontSize from "./font-size";
-import fontWeight from "./font-weight";
-import strings from "./strings";
-
-export { colors, fontSize, fontWeight, strings };
+export * from "./colors";
+export * from "./font-size";
+export * from "./font-weight";
+export * from "./strings";

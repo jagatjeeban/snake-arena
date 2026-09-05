@@ -1,4 +1,4 @@
-const fontSize = {
+export const fontSize = {
   xxxLargest: 40,
   xLargest: 34,
   largest: 29,
@@ -18,5 +18,3 @@ const fontSize = {
   xTiny: 8,
   tiny: 7,
 } as const;
-
-export default fontSize;
