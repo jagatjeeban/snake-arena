@@ -20,6 +20,8 @@
         "expo-symbols": "~57.0.2",
         "expo-system-ui": "~57.0.3",
         "expo-web-browser": "~57.0.2",
+        "lottie-react-native": "~7.3.8",
+        "pressto": "^0.7.0",
         "react": "19.2.3",
         "react-dom": "19.2.3",
         "react-native": "0.86.3",
@@ -723,6 +725,8 @@
 
     "loose-envify": ["loose-envify@1.4.0", "", { "dependencies": { "js-tokens": "^3.0.0 || ^4.0.0" }, "bin": { "loose-envify": "cli.js" } }, "sha512-lyuxPGr/Wfhrlem2CL/UcnUc1zcqKAImBDzukY7Y5F/yQiNdko6+fRLevlw1HgMySw7f611UIY408EtxRSoK3Q=="],
 
+    "lottie-react-native": ["lottie-react-native@7.3.8", "", { "peerDependencies": { "@lottiefiles/dotlottie-react": "^0.13.5", "react": "*", "react-native": ">=0.46", "react-native-windows": ">=0.63.x" }, "optionalPeers": ["@lottiefiles/dotlottie-react", "react-native-windows"] }, "sha512-GAOl99TKi0c6xCcB1AJ+o70mgOPIAI/7K2G+Gs+o4po/qBhgvWijPNCKH8h6yNmlwFTg+RN3DmzRvHNFGxZMKQ=="],
+
     "lru-cache": ["lru-cache@5.1.1", "", { "dependencies": { "yallist": "^3.0.2" } }, "sha512-KpNARQA3Iwv+jTA0utUVVbrh+Jlrr1Fv0e56GGzAFOXN7dk/FviaDW8LHmK52DlcH4WP2n6gI8vN1aesBFgo9w=="],
 
     "makeerror": ["makeerror@1.0.12", "", { "dependencies": { "tmpl": "1.0.5" } }, "sha512-JmqCvUhmt43madlpFzG4BQzG2Z3m6tvQDNKdClZnO3VbIudJYmxsT0FNJMeiB2+JTSlTQTSbU8QdesVmwJcmLg=="],
@@ -832,6 +836,8 @@
     "postcss": ["postcss@8.5.26", "", { "dependencies": { "nanoid": "^3.3.17", "picocolors": "^1.1.1", "source-map-js": "^1.2.1" } }, "sha512-u82N74LFzG8ca+dD8puPnplTXoGH4fTPpVGuIbt36G3qvNlkvfD0lEAZSxaly3KX8TS/L1A1gsCEmvKmBcVbkQ=="],
 
     "postcss-value-parser": ["postcss-value-parser@4.2.0", "", {}, "sha512-1NNCs6uurfkVbeXG4S8JFT9t19m45ICnif8zWLd5oPSZ50QnwMfK+H3jv408d4jw/7Bttv5axS5IiHoLaVNHeQ=="],
+
+    "pressto": ["pressto@0.7.0", "", { "peerDependencies": { "react": "*", "react-native": "*", "react-native-gesture-handler": "*", "react-native-reanimated": "*", "react-native-worklets": "*" } }, "sha512-PloRpYGlToGM0NV9XudJ8NNlcHWRTHlWeU8w9mkkNp28KrlCuF+JP1hnStlWCCDx3v9BKN5V4jsEw/xlKJosIQ=="],
 
     "pretty-format": ["pretty-format@29.7.0", "", { "dependencies": { "@jest/schemas": "^29.6.3", "ansi-styles": "^5.0.0", "react-is": "^18.0.0" } }, "sha512-Pdlw/oPxN+aXdmM9R00JVC9WVFoCLTKJvDVLgmJ+qAffBMxsV85l/Lu7sNx4zSzPyoL2euImuEwHhOXdEgNFZQ=="],
 

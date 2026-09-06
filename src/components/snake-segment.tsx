@@ -1,4 +1,4 @@
-import { Fragment, useEffect } from "react";
+import { Fragment, useEffect, useMemo } from "react";
 import { StyleSheet, View, ViewStyle } from "react-native";
 import Animated, {
   Easing,
@@ -14,6 +14,7 @@ import { colors } from "@/constants";
 import {
   ANIMATION_OVERLAP_MS,
   CELL_SIZE,
+  SNAKE_SEGMENT_OFFSET,
   SNAKE_SEGMENT_SIZE,
 } from "@/features/game/config";
 
@@ -28,8 +29,12 @@ const SnakeSegment = ({
   direction,
 }: SnakeSegmentProps) => {
   //shared values
-  const translateX = useSharedValue<number>(segment.x * CELL_SIZE);
-  const translateY = useSharedValue<number>(segment.y * CELL_SIZE);
+  const translateX = useSharedValue<number>(
+    segment.x * CELL_SIZE + SNAKE_SEGMENT_OFFSET,
+  );
+  const translateY = useSharedValue<number>(
+    segment.y * CELL_SIZE + SNAKE_SEGMENT_OFFSET,
+  );
 
   const xAxis = direction === Direction.Left || direction === Direction.Right;
 
@@ -39,8 +44,12 @@ const SnakeSegment = ({
       easing: Easing.linear,
     };
 
-    translateX.set(withTiming(segment.x * CELL_SIZE, animation));
-    translateY.set(withTiming(segment.y * CELL_SIZE, animation));
+    translateX.set(
+      withTiming(segment.x * CELL_SIZE + SNAKE_SEGMENT_OFFSET, animation),
+    );
+    translateY.set(
+      withTiming(segment.y * CELL_SIZE + SNAKE_SEGMENT_OFFSET, animation),
+    );
   }, [segment.x, segment.y, tickMs, translateX, translateY]);
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -50,23 +59,32 @@ const SnakeSegment = ({
     ],
   }));
 
-  const snakeEyeDirection: ViewStyle = {
-    flexDirection: xAxis ? "column" : "row",
-    alignItems: xAxis
-      ? direction === Direction.Left
-        ? "flex-start"
-        : "flex-end"
-      : direction === Direction.Up
-        ? "flex-start"
-        : "flex-end",
-  };
+  const snakeEyeDirection: ViewStyle = useMemo(() => {
+    return {
+      flexDirection: xAxis ? "column" : "row",
+      alignItems: xAxis
+        ? direction === Direction.Left
+          ? "flex-start"
+          : "flex-end"
+        : direction === Direction.Up
+          ? "flex-start"
+          : "flex-end",
+    };
+  }, [xAxis, direction]);
   const margin = 3;
-  const snakeEyeMargin: ViewStyle = {
-    marginTop: direction === Direction.Up ? margin : undefined,
-    marginLeft: direction === Direction.Left ? margin : undefined,
-    marginRight: direction === Direction.Right ? margin : undefined,
-    marginBottom: direction === Direction.Down ? margin : undefined,
-  };
+  const snakeEyeMargin: ViewStyle = useMemo(() => {
+    return {
+      marginTop: direction === Direction.Up ? margin : undefined,
+      marginLeft: direction === Direction.Left ? margin : undefined,
+      marginRight: direction === Direction.Right ? margin : undefined,
+      marginBottom: direction === Direction.Down ? margin : undefined,
+    };
+  }, [direction]);
+  // const segmentRadius: ViewStyle = useMemo(() => {
+  //   return {
+  //     borderRadius: index === 0 ? 3 : undefined,
+  //   };
+  // }, [index]);
 
   return (
     <Animated.View style={[styles.segment, snakeEyeDirection, animatedStyle]}>

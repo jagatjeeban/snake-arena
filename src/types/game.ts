@@ -23,10 +23,20 @@ export type Boundary = {
 };
 
 export type DifficultyLevel = "easy" | "normal" | "hard";
+// export enum DifficultyLevel {
+//   Easy = "Easy",
+//   Normal = "Normal",
+//   Hard = "Hard",
+// }
 
 export type DifficultyConfig = {
   initialTickMs: number;
   minimumTickMs: number;
   initialTickMsDecrement: number;
   scoreIncrement: number;
+};
+
+export type GameProps = {
+  difficulty: DifficultyConfig;
+  onGameOver: () => void;
 };

@@ -7,11 +7,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { colors } from "@/constants";
 
 //import types
-import { Coordinate, Direction, type GestureEventType } from "@/types/game";
+import {
+  Coordinate,
+  Direction,
+  GameProps,
+  type GestureEventType,
+} from "@/types/game";
 
 //import game configs
 import {
-  DIFFICULTY_CONFIGS,
   FOOD_AREA,
   getInitialFoodPosition,
   getInitialSnakePosition,
@@ -36,12 +40,9 @@ import {
   getSnakeNextHeadPosition,
 } from "@/utils";
 
-const Game = () => {
+const Game = ({ difficulty, onGameOver }: GameProps) => {
   //hooks
   const board = useGameBoard();
-
-  //variables
-  const difficulty = DIFFICULTY_CONFIGS.hard;
 
   //states
   const [direction, setDirection] = useState<Direction>(Direction.Right);
@@ -87,14 +88,16 @@ const Game = () => {
       current === nextDirection ? current : nextDirection,
     );
 
-    const newHead = getSnakeNextHeadPosition({ ...snake[0] }, nextDirection);
-    const snakeAteFood = checkEatsFood(newHead, food, FOOD_AREA);
+    const currentHead = snake[0];
+    const newHead = getSnakeNextHeadPosition({ ...currentHead }, nextDirection);
+    const snakeAteFood = checkEatsFood(currentHead, food, FOOD_AREA);
     const newSnake = snakeAteFood
       ? [newHead, ...snake]
       : [newHead, ...snake.slice(0, -1)];
 
-    if (checkGameOver(newSnake, board.bounds)) {
+    if (checkGameOver(snake, board.bounds)) {
       setIsGameOver(true);
+      onGameOver();
       return;
     }
 

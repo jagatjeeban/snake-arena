@@ -32,3 +32,23 @@ export const DIFFICULTY_CONFIGS = {
     scoreIncrement: 15,
   },
 } satisfies Record<DifficultyLevel, DifficultyConfig>;
+
+/**
+ * function to get the difficulty config as per the selected difficulty level
+ * @param difficultyLevel selected difficulty level
+ * @returns difficulty config as per the difficulty level
+ */
+export const getDifficultyConfig = (
+  difficultyLevel: DifficultyLevel,
+): DifficultyConfig => {
+  switch (difficultyLevel) {
+    case "easy":
+      return DIFFICULTY_CONFIGS.easy;
+    case "normal":
+      return DIFFICULTY_CONFIGS.normal;
+    case "hard":
+      return DIFFICULTY_CONFIGS.hard;
+    default:
+      return DIFFICULTY_CONFIGS.normal;
+  }
+};
