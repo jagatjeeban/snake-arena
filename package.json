@@ -31,10 +31,14 @@
     "react-native-worklets": "0.10.1"
   },
   "devDependencies": {
+    "@types/node": "^26.5.0",
     "@types/react": "~19.2.2",
+    "eslint": "^9",
+    "eslint-config-expo": "~57.0.2",
     "typescript": "~6.0.3"
   },
   "scripts": {
+    "test": "bun build ./tests/snake-engine.test.ts --target=node --outfile=./.test-build/snake-engine.test.mjs && node --test ./.test-build/snake-engine.test.mjs",
     "start": "expo start",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",

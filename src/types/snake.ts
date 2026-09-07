@@ -1,7 +1,7 @@
-import { Coordinate, Direction } from "./game";
+import type { SharedValue } from "react-native-reanimated";
+import type { MovementSnapshot } from "@/features/game/engine/snake-engine";
 
 export type SnakeProps = {
-  snake: Coordinate[];
-  tickMs: number;
-  direction: Direction;
+  capacity: number;
+  snapshot: SharedValue<MovementSnapshot>;
 };
