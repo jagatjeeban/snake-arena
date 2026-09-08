@@ -1,5 +1,6 @@
+//import types
 import type { SharedValue } from "react-native-reanimated";
-import type { MovementSnapshot } from "@/features/game/engine/snake-engine";
+import type { MovementSnapshot } from "./game";
 
 export type SnakeProps = {
   capacity: number;

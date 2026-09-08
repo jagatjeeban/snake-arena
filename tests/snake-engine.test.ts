@@ -1,6 +1,7 @@
-import assert from "node:assert/strict";
-import { describe, it } from "node:test";
-import { Direction, type Coordinate } from "@/types/game";
+import {
+  acceptsSessionEvent,
+  claimCompletion,
+} from "@/features/game/engine/session-events";
 import {
   acknowledgeRenderer,
   advanceEngine,
@@ -14,10 +15,9 @@ import {
   selectFreeCell,
   type EngineState,
 } from "@/features/game/engine/snake-engine";
-import {
-  acceptsSessionEvent,
-  claimCompletion,
-} from "@/features/game/engine/session-events";
+import { Direction, type Coordinate } from "@/types/game";
+import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 
 const bounds = { xMin: 0, yMin: 0, xMax: 9, yMax: 9 };
 const difficulty = {

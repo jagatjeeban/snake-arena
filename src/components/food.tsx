@@ -3,8 +3,12 @@ import Animated, {
   useAnimatedStyle,
   type SharedValue,
 } from "react-native-reanimated";
+
+//import game configs
 import { CELL_SIZE, FOOD_SIZE } from "@/features/game/config";
-import type { MovementSnapshot } from "@/features/game/engine/snake-engine";
+
+//import types
+import type { MovementSnapshot } from "@/types/game";
 
 const Food = ({ snapshot }: { snapshot: SharedValue<MovementSnapshot> }) => {
   const style = useAnimatedStyle(() => {
@@ -17,6 +21,7 @@ const Food = ({ snapshot }: { snapshot: SharedValue<MovementSnapshot> }) => {
       ],
     };
   });
+
   return (
     <Animated.View
       pointerEvents="none"

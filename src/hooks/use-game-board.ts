@@ -28,8 +28,6 @@ export const useGameBoard = () => {
     cellSize: CELL_SIZE,
     columns,
     rows,
-    measuredWidth: size.width,
-    measuredHeight: size.height,
     boardWidth: columns * CELL_SIZE,
     boardHeight: rows * CELL_SIZE,
     bounds: useMemo(

@@ -16,11 +16,29 @@ import {
 } from "react-native-reanimated";
 import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
 
+//import hooks
+import type { useGameBoard } from "@/hooks/use-game-board";
+
+//import types
+import {
+  Direction,
+  EngineEvent,
+  EngineState,
+  GameProps,
+  SessionEvents,
+} from "@/types/game";
+
+//import game configs
 import {
   getInitialFoodPosition,
   getInitialSnakePosition,
   SWIPE_MIN_DISTANCE,
 } from "../config";
+
+//import session events
+import { acceptsSessionEvent, claimCompletion } from "../engine/session-events";
+
+//import engine functions
 import {
   acknowledgeRenderer,
   advanceFrame,
@@ -29,24 +47,11 @@ import {
   pauseEngine,
   queueDirection,
   resumeEngine,
-  type EngineState,
-  type Phase,
 } from "../engine/snake-engine";
-import {
-  acceptsSessionEvent,
-  claimCompletion,
-  type SessionEvents,
-} from "../engine/session-events";
-import { Direction, type GameProps } from "@/types/game";
-import type { useGameBoard } from "@/hooks/use-game-board";
 
-type EngineEvent = {
-  sessionId: number;
-  phase: Phase;
-  score: number;
-  capacity: number;
-  complete: boolean;
-};
+// Native stack transitions can report an interim safe-area height before the
+// destination screen settles. Start once from the latest measured grid.
+const INITIAL_LAYOUT_SETTLE_MS = 1_000;
 
 export function useSnakeGame(
   board: ReturnType<typeof useGameBoard>,
@@ -62,7 +67,9 @@ export function useSnakeGame(
   });
   const foreground = useRef(AppState.currentState === "active");
   const focused = useRef(true);
-  const initialized = useRef(false);
+  const initializedGrid = useRef<string | null>(null);
+  const initialLayoutSettled = useRef(false);
+  const initialLayoutStartedAt = useRef<number | null>(null);
   const callback = useRef(onGameOver);
   const [renderer, setRenderer] = useState({ sessionId: 0, capacity: 0 });
   const [status, setStatus] = useState({ isPaused: false, score: 0 });
@@ -169,21 +176,40 @@ export function useSnakeGame(
   useEffect(() => {
     if (!board.ready) {
       // A temporarily unmeasurable board must not keep running off screen.
-      scheduleOnUI(() => {
-        const state = runtime.get();
-        if (state) runtime.set(pauseEngine(state));
-      });
+      if (initializedGrid.current !== null) {
+        scheduleOnUI(() => {
+          const state = runtime.get();
+          if (state) runtime.set(pauseEngine(state));
+        });
+      }
+      if (!initialLayoutSettled.current) {
+        initializedGrid.current = null;
+        initialLayoutStartedAt.current = null;
+      }
       return;
     }
-    startSession(initialized.current);
-    initialized.current = true;
-  }, [
-    board.ready,
-    board.measuredWidth,
-    board.measuredHeight,
-    startSession,
-    runtime,
-  ]);
+    const grid = `${board.columns}x${board.rows}`;
+    if (initializedGrid.current === grid) return;
+    initializedGrid.current = grid;
+    if (!initialLayoutSettled.current) {
+      const now = Date.now();
+      initialLayoutStartedAt.current ??= now;
+      const remaining = Math.max(
+        0,
+        INITIAL_LAYOUT_SETTLE_MS - (now - initialLayoutStartedAt.current),
+      );
+      const timer = setTimeout(() => {
+        initialLayoutSettled.current = true;
+        startSession(false);
+      }, remaining);
+      return () => clearTimeout(timer);
+    }
+    scheduleOnUI(() => {
+      const state = runtime.get();
+      if (state) runtime.set(pauseEngine(state));
+    });
+    startSession(true);
+  }, [board.ready, board.columns, board.rows, startSession, runtime]);
 
   // React has committed the slot views before this acknowledgement reaches the UI runtime.
   useEffect(() => {

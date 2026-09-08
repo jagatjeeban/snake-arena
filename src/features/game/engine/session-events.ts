@@ -1,9 +1,5 @@
-/** RN-side guard: invalidate synchronously, before queued UI callbacks can arrive. */
-export type SessionEvents = {
-  sessionId: number;
-  mounted: boolean;
-  delivered: boolean;
-};
+//import types
+import { SessionEvents } from "@/types/game";
 
 export function acceptsSessionEvent(events: SessionEvents, sessionId: number) {
   return events.mounted && events.sessionId === sessionId;
