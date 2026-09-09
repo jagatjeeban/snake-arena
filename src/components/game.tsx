@@ -2,15 +2,22 @@ import { StyleSheet, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import { SafeAreaView } from "react-native-safe-area-context";
 
+//import constants
 import { colors } from "@/constants";
-import { useSnakeGame } from "@/features/game/hooks/use-snake-game";
-import { useGameBoard } from "@/hooks";
+
+//import hooks
+import { useGameBoard, useSnakeGame } from "@/hooks";
+
+//import types
 import type { GameProps } from "@/types/game";
+
+//import components
 import Food from "./food";
 import Header from "./header";
 import Snake from "./snake";
 
 const Game = (props: GameProps) => {
+  //hooks
   const board = useGameBoard();
   const game = useSnakeGame(board, props);
 

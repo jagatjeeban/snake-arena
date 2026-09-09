@@ -1,4 +1,4 @@
-import { useFocusEffect } from "expo-router";
+//import React
 import {
   useCallback,
   useEffect,
@@ -6,7 +6,14 @@ import {
   useRef,
   useState,
 } from "react";
+
+//import React Native
 import { AppState, Platform } from "react-native";
+
+//import Expo
+import { useFocusEffect } from "expo-router";
+
+//import animation and gestures
 import { Gesture } from "react-native-gesture-handler";
 import {
   useAnimatedReaction,
@@ -16,50 +23,59 @@ import {
 } from "react-native-reanimated";
 import { scheduleOnRN, scheduleOnUI } from "react-native-worklets";
 
+//import game configuration
+import {
+  getInitialFoodPosition,
+  getInitialSnakePosition,
+  INITIAL_LAYOUT_SETTLE_MS,
+  SWIPE_MIN_DISTANCE,
+} from "@/features/game/config";
+import { Direction } from "@/types/game";
+
 //import hooks
-import type { useGameBoard } from "@/hooks/use-game-board";
+import type { useGameBoard } from "./use-game-board";
+
+//import engine helpers
+import { movementSnapshot } from "@/features/game/engine/movement-snapshot";
+import {
+  acceptsSessionEvent,
+  claimCompletion,
+} from "@/features/game/engine/session-events";
+import {
+  acknowledgeRenderer,
+  advanceFrame,
+  createEngine,
+  pauseEngine,
+  queueDirection,
+  resumeEngine,
+} from "@/features/game/engine/snake-engine";
 
 //import types
-import {
-  Direction,
+import type {
   EngineEvent,
   EngineState,
   GameProps,
   SessionEvents,
 } from "@/types/game";
 
-//import game configs
-import {
-  getInitialFoodPosition,
-  getInitialSnakePosition,
-  SWIPE_MIN_DISTANCE,
-} from "../config";
-
-//import session events
-import { acceptsSessionEvent, claimCompletion } from "../engine/session-events";
-
-//import engine functions
-import {
-  acknowledgeRenderer,
-  advanceFrame,
-  createEngine,
-  movementSnapshot,
-  pauseEngine,
-  queueDirection,
-  resumeEngine,
-} from "../engine/snake-engine";
-
-// Native stack transitions can report an interim safe-area height before the
-// destination screen settles. Start once from the latest measured grid.
-const INITIAL_LAYOUT_SETTLE_MS = 1_000;
-
+/**
+ * Coordinate UI-thread gameplay, renderer slots, gestures, and session lifecycle.
+ * @param board the measured board geometry and readiness from useGameBoard
+ * @param props the game configuration and completion callback
+ * @param props.difficulty the movement timing and scoring configuration
+ * @param props.onGameOver the callback delivered once when the active session completes
+ * @returns the movement snapshot, pan gesture, pause and restart controls, renderer capacity, pause status, and accessible score
+ */
 export function useSnakeGame(
   board: ReturnType<typeof useGameBoard>,
   { difficulty, onGameOver }: GameProps,
 ) {
+  //shared values
   const runtime = useSharedValue<EngineState | null>(null);
   const interactionEnabled = useSharedValue(true);
   const snapshot = useDerivedValue(() => movementSnapshot(runtime.get()));
+
+  //refs
   const events = useRef<SessionEvents>({
     sessionId: 0,
     mounted: false,
@@ -71,36 +87,63 @@ export function useSnakeGame(
   const initialLayoutSettled = useRef(false);
   const initialLayoutStartedAt = useRef<number | null>(null);
   const callback = useRef(onGameOver);
+
+  //states
   const [renderer, setRenderer] = useState({ sessionId: 0, capacity: 0 });
   const [status, setStatus] = useState({ isPaused: false, score: 0 });
+
+  // Keep the completion callback current without restarting the session.
   useLayoutEffect(() => {
     callback.current = onGameOver;
   }, [onGameOver]);
 
-  const receiveEvent = useCallback((event: EngineEvent) => {
-    if (!acceptsSessionEvent(events.current, event.sessionId)) return;
-    setStatus((current) =>
-      current.isPaused === (event.phase === "paused") &&
-      current.score === event.score
-        ? current
-        : { isPaused: event.phase === "paused", score: event.score },
-    );
-    setRenderer((current) =>
-      current.sessionId === event.sessionId &&
-      current.capacity >= event.capacity
-        ? current
-        : { sessionId: event.sessionId, capacity: event.capacity },
-    );
+  // Advance active movement and terminal holds on the UI thread.
+  const frameCallback = useFrameCallback((frame) => {
+    const state = runtime.get();
     if (
-      event.complete &&
-      foreground.current &&
-      focused.current &&
-      claimCompletion(events.current, event.sessionId)
-    ) {
-      callback.current();
-    }
-  }, []);
+      !state ||
+      (state.phase !== "moving" && state.phase !== "terminal") ||
+      state.completionReady
+    )
+      return;
+    runtime.set(advanceFrame(state, frame.timestamp));
+  }, false);
 
+  // Apply session events to React and deliver completion at most once.
+  const receiveEvent = useCallback(
+    (event: EngineEvent) => {
+      if (!acceptsSessionEvent(events.current, event.sessionId)) return;
+      frameCallback.setActive(
+        foreground.current &&
+          focused.current &&
+          (event.phase === "moving" || event.phase === "terminal") &&
+          !event.complete,
+      );
+      setStatus((current) =>
+        current.isPaused === (event.phase === "paused") &&
+        current.score === event.score
+          ? current
+          : { isPaused: event.phase === "paused", score: event.score },
+      );
+      setRenderer((current) =>
+        current.sessionId === event.sessionId &&
+        current.capacity >= event.capacity
+          ? current
+          : { sessionId: event.sessionId, capacity: event.capacity },
+      );
+      if (
+        event.complete &&
+        foreground.current &&
+        focused.current &&
+        claimCompletion(events.current, event.sessionId)
+      ) {
+        callback.current();
+      }
+    },
+    [frameCallback],
+  );
+
+  // Bridge only changes in session status, score, capacity, or completion.
   useAnimatedReaction(
     (): EngineEvent | null => {
       const state = runtime.get();
@@ -129,32 +172,25 @@ export function useSnakeGame(
     },
   );
 
-  useFrameCallback((frame) => {
-    const state = runtime.get();
-    if (
-      !state ||
-      (state.phase !== "moving" && state.phase !== "terminal") ||
-      state.completionReady
-    )
-      return;
-    runtime.set(advanceFrame(state, frame.timestamp));
-  });
-
+  // Invalidate callbacks and clear this session when the hook unmounts.
   useEffect(() => {
     const sessionEvents = events.current;
     sessionEvents.mounted = true;
     return () => {
+      frameCallback.setActive(false);
       sessionEvents.mounted = false;
       const sessionId = sessionEvents.sessionId;
       scheduleOnUI(() => {
         if (runtime.get()?.sessionId === sessionId) runtime.set(null);
       });
     };
-  }, [runtime]);
+  }, [frameCallback, runtime]);
 
+  // Start a fresh seeded session using the current measured board.
   const startSession = useCallback(
     (paused: boolean) => {
       if (!board.ready) return;
+      frameCallback.setActive(false);
       const sessionId = ++events.current.sessionId;
       events.current.delivered = false;
       const options = {
@@ -170,13 +206,15 @@ export function useSnakeGame(
         runtime.set(createEngine(options));
       });
     },
-    [board.ready, board.bounds, difficulty, runtime],
+    [board.ready, board.bounds, difficulty, frameCallback, runtime],
   );
 
+  // Wait for initial layout and pause replacement sessions after grid changes.
   useEffect(() => {
     if (!board.ready) {
       // A temporarily unmeasurable board must not keep running off screen.
       if (initializedGrid.current !== null) {
+        frameCallback.setActive(false);
         scheduleOnUI(() => {
           const state = runtime.get();
           if (state) runtime.set(pauseEngine(state));
@@ -188,9 +226,12 @@ export function useSnakeGame(
       }
       return;
     }
+
     const grid = `${board.columns}x${board.rows}`;
     if (initializedGrid.current === grid) return;
+
     initializedGrid.current = grid;
+
     if (!initialLayoutSettled.current) {
       const now = Date.now();
       initialLayoutStartedAt.current ??= now;
@@ -209,7 +250,14 @@ export function useSnakeGame(
       if (state) runtime.set(pauseEngine(state));
     });
     startSession(true);
-  }, [board.ready, board.columns, board.rows, startSession, runtime]);
+  }, [
+    board.ready,
+    board.columns,
+    board.rows,
+    frameCallback,
+    startSession,
+    runtime,
+  ]);
 
   // React has committed the slot views before this acknowledgement reaches the UI runtime.
   useEffect(() => {
@@ -220,15 +268,18 @@ export function useSnakeGame(
     });
   }, [renderer, runtime]);
 
+  // Disable input and pause gameplay whenever the app or route is inactive.
   const updateActivity = useCallback(() => {
     const enabled = foreground.current && focused.current;
+    if (!enabled) frameCallback.setActive(false);
     scheduleOnUI(() => {
       interactionEnabled.set(enabled);
       const state = runtime.get();
       if (!enabled && state) runtime.set(pauseEngine(state));
     });
-  }, [interactionEnabled, runtime]);
+  }, [frameCallback, interactionEnabled, runtime]);
 
+  // Track foreground activity and Android notification-shade focus.
   useEffect(() => {
     const subscription = AppState.addEventListener("change", (state) => {
       foreground.current = state === "active";
@@ -257,6 +308,7 @@ export function useSnakeGame(
     };
   }, [updateActivity]);
 
+  // Synchronize route focus with gameplay activity.
   useFocusEffect(
     useCallback(() => {
       focused.current = true;
@@ -268,6 +320,7 @@ export function useSnakeGame(
     }, [updateActivity]),
   );
 
+  // Toggle pause on the UI thread while interaction is enabled.
   const togglePause = () => {
     "worklet";
     const state = runtime.get();
@@ -277,6 +330,8 @@ export function useSnakeGame(
       );
   };
 
+  //gestures
+  // Queue a direction from the dominant axis of the completed swipe.
   const pan = Gesture.Pan()
     .minDistance(SWIPE_MIN_DISTANCE)
     .onEnd((event) => {
@@ -293,10 +348,12 @@ export function useSnakeGame(
       runtime.set(queueDirection(state, direction));
     });
 
+  //public game controls and presentation state
   return {
     snapshot,
     pan,
     togglePause,
+    // Start an unpaused replacement session when activity allows it.
     restart: () => startSession(false),
     capacity: renderer.capacity,
     isPaused: status.isPaused,

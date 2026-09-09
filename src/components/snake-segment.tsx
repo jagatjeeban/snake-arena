@@ -2,9 +2,16 @@ import { memo } from "react";
 import { StyleSheet, View } from "react-native";
 import Animated, { useAnimatedStyle } from "react-native-reanimated";
 
+//import constants
 import { colors } from "@/constants";
+
+//import game configs
 import { CELL_SIZE, SNAKE_SEGMENT_SIZE } from "@/features/game/config";
-import { segmentPosition } from "@/features/game/engine/snake-engine";
+
+//import engine helpers
+import { segmentPosition } from "@/features/game/engine/movement-snapshot";
+
+//import types
 import { Direction } from "@/types/game";
 import type { SnakeSegmentProps } from "@/types/snake-segment";
 

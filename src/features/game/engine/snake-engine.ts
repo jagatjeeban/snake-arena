@@ -1,67 +1,26 @@
+//import constants
+import { Direction } from "@/types/game";
+
+//import engine helpers
+import { selectFreeCell } from "./food-placement";
+import { inBounds, isOppositeDirection, nextHeadPosition, sameCell } from "./grid";
+
 //import types
-import {
+import type {
   Boundary,
   Coordinate,
   DifficultyConfig,
-  Direction,
   EngineState,
-  MovementSnapshot,
   PendingMove,
   TerminalReason,
-} from "../../../types/game";
+} from "@/types/game";
 
+//renderer and timing constants
 export const SEGMENT_BATCH_SIZE = 32;
 export const SPARE_SEGMENT_THRESHOLD = 16;
 export const TERMINAL_HOLD_MS = 300;
 
-export function sameCell(a: Coordinate, b: Coordinate): boolean {
-  "worklet";
-  return a.x === b.x && a.y === b.y;
-}
-
-function inBounds(point: Coordinate, bounds: Boundary): boolean {
-  "worklet";
-  return (
-    Number.isInteger(point.x) &&
-    Number.isInteger(point.y) &&
-    point.x >= bounds.xMin &&
-    point.x <= bounds.xMax &&
-    point.y >= bounds.yMin &&
-    point.y <= bounds.yMax
-  );
-}
-
-/** One seeded draw and one bounded board scan, even when the board is full. */
-export function selectFreeCell(
-  bounds: Boundary,
-  snake: Coordinate[],
-  seed: number,
-) {
-  "worklet";
-  const nextSeed = (Math.imul(seed, 1664525) + 1013904223) >>> 0;
-  const width = bounds.xMax - bounds.xMin + 1;
-  const capacity = width * (bounds.yMax - bounds.yMin + 1);
-  const occupied: Record<number, boolean> = {};
-  for (const cell of snake) {
-    occupied[(cell.y - bounds.yMin) * width + cell.x - bounds.xMin] = true;
-  }
-  let freeCount = 0;
-  for (let i = 0; i < capacity; i++) if (!occupied[i]) freeCount++;
-  let target = Math.floor((nextSeed / 4294967296) * freeCount);
-  for (let i = 0; i < capacity; i++) {
-    if (!occupied[i] && target-- === 0) {
-      return {
-        food: {
-          x: bounds.xMin + (i % width),
-          y: bounds.yMin + Math.floor(i / width),
-        } as Coordinate | null,
-        seed: nextSeed,
-      };
-    }
-  }
-  return { food: null as Coordinate | null, seed: nextSeed };
-}
-
+// Hold the final committed board before delivering completion.
 function terminal(state: EngineState, reason: TerminalReason): EngineState {
   "worklet";
   return {
@@ -76,23 +35,13 @@ function terminal(state: EngineState, reason: TerminalReason): EngineState {
   };
 }
 
+// Prepare the next move and wait for renderer slots when growth needs them.
 function prepare(state: EngineState): EngineState {
   "worklet";
   const { committed } = state;
   const direction = state.queuedDirection ?? committed.direction;
   const head = committed.snake[0];
-  const destination = {
-    x:
-      head.x +
-      (direction === Direction.Right
-        ? 1
-        : direction === Direction.Left
-          ? -1
-          : 0),
-    y:
-      head.y +
-      (direction === Direction.Down ? 1 : direction === Direction.Up ? -1 : 0),
-  };
+  const destination = nextHeadPosition(head, direction);
   // A boundary attempt stops on the last valid, already arrived cell.
   if (!inBounds(destination, state.bounds)) return terminal(state, "boundary");
   const eats = committed.food !== null && sameCell(destination, committed.food);
@@ -126,6 +75,19 @@ function prepare(state: EngineState): EngineState {
   };
 }
 
+/**
+ * Create a seeded game session with valid starting cells and renderer capacity.
+ * @param options the initial game session configuration
+ * @param options.bounds the inclusive board limits
+ * @param options.difficulty the movement timing and scoring configuration
+ * @param options.sessionId the identity used to reject stale session events
+ * @param options.seed the initial pseudorandom generator seed
+ * @param options.snake the initial snake cells, replaced with a valid fallback if invalid
+ * @param options.food the initial food cell, replaced with a free cell if invalid
+ * @param options.direction the initial direction; defaults to right
+ * @param options.paused whether to start paused; defaults to false
+ * @returns the initialized engine state awaiting renderer acknowledgement or resume
+ */
 export function createEngine(options: {
   bounds: Boundary;
   difficulty: DifficultyConfig;
@@ -186,6 +148,13 @@ export function createEngine(options: {
   };
 }
 
+/**
+ * Accept mounted slots for the current session and release pending movement.
+ * @param state the current engine state
+ * @param sessionId the identity of the session whose slots were mounted
+ * @param capacity the number of mounted segment slots
+ * @returns the state with acknowledged capacity and eligible movement released, or the unchanged state for a stale session
+ */
 export function acknowledgeRenderer(
   state: EngineState,
   sessionId: number,
@@ -215,6 +184,12 @@ export function acknowledgeRenderer(
   return next;
 }
 
+/**
+ * Queue one non-reversing direction change for the next move.
+ * @param state the current engine state
+ * @param direction the requested direction for the next move
+ * @returns the state with a queued turn, or the unchanged state when the turn is not accepted
+ */
 export function queueDirection(
   state: EngineState,
   direction: Direction,
@@ -222,16 +197,17 @@ export function queueDirection(
   "worklet";
   if (state.phase !== "moving" || state.queuedDirection !== null) return state;
   const current = state.pending?.direction ?? state.committed.direction;
-  const opposite =
-    (current === Direction.Right && direction === Direction.Left) ||
-    (current === Direction.Left && direction === Direction.Right) ||
-    (current === Direction.Up && direction === Direction.Down) ||
-    (current === Direction.Down && direction === Direction.Up);
+  const opposite = isOppositeDirection(current, direction);
   return opposite || current === direction
     ? state
     : { ...state, queuedDirection: direction };
 }
 
+/**
+ * Pause the current phase and discard queued input and frame timing.
+ * @param state the current engine state
+ * @returns the paused state with cleared input and frame timing, or the unchanged state if already paused
+ */
 export function pauseEngine(state: EngineState): EngineState {
   "worklet";
   if (state.phase === "paused") return state;
@@ -245,6 +221,11 @@ export function pauseEngine(state: EngineState): EngineState {
   };
 }
 
+/**
+ * Restore the paused phase after checking available renderer capacity.
+ * @param state the current engine state
+ * @returns the restored state with renderer readiness checked, or the unchanged state if not paused
+ */
 export function resumeEngine(state: EngineState): EngineState {
   "worklet";
   if (state.phase !== "paused") return state;
@@ -252,7 +233,12 @@ export function resumeEngine(state: EngineState): EngineState {
   return acknowledgeRenderer(next, next.sessionId, next.mountedCapacity);
 }
 
-/** Inject deltas for deterministic tests; the app supplies monotonic UI frame timestamps. */
+/**
+ * Inject deltas for deterministic tests; the app supplies monotonic UI frame timestamps.
+ * @param state the current engine state
+ * @param deltaMs the elapsed milliseconds, clamped to a safe nonnegative step
+ * @returns the state after movement or terminal-hold advancement, or the unchanged state when no advancement applies
+ */
 export function advanceEngine(
   state: EngineState,
   deltaMs: number,
@@ -309,6 +295,12 @@ export function advanceEngine(
   return prepare(next);
 }
 
+/**
+ * Advance from UI frame timestamps, resetting the baseline after a pause.
+ * @param state the current engine state
+ * @param timestamp the monotonic UI frame timestamp in milliseconds
+ * @returns the advanced state with an updated timestamp, or the unchanged state for an inactive phase
+ */
 export function advanceFrame(
   state: EngineState,
   timestamp: number,
@@ -319,43 +311,4 @@ export function advanceFrame(
     return { ...state, lastTimestamp: timestamp };
   const next = advanceEngine(state, timestamp - state.lastTimestamp);
   return { ...next, lastTimestamp: timestamp };
-}
-
-export function movementSnapshot(state: EngineState | null): MovementSnapshot {
-  "worklet";
-  if (!state)
-    return {
-      from: [],
-      to: [],
-      progress: 0,
-      direction: Direction.Right,
-      food: null,
-      score: 0,
-    };
-  const waiting =
-    state.phase === "waiting-for-renderer" ||
-    (state.phase === "paused" && state.pausedPhase === "waiting-for-renderer");
-  const pending = waiting ? null : state.pending;
-  return {
-    from: pending?.from ?? state.committed.snake,
-    to: pending?.to ?? state.committed.snake,
-    progress: pending ? Math.min(1, state.elapsedMs / pending.durationMs) : 0,
-    direction: pending?.direction ?? state.committed.direction,
-    food: state.committed.food,
-    score: state.committed.score,
-  };
-}
-
-export function segmentPosition(
-  snapshot: MovementSnapshot,
-  index: number,
-): Coordinate | null {
-  "worklet";
-  const from = snapshot.from[index];
-  const to = snapshot.to[index];
-  if (!from || !to) return null;
-  return {
-    x: from.x + (to.x - from.x) * snapshot.progress,
-    y: from.y + (to.y - from.y) * snapshot.progress,
-  };
 }
