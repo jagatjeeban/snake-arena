@@ -1,19 +1,52 @@
 import { SymbolView } from "expo-symbols";
-import { Pressable, StyleSheet, View } from "react-native";
+import {
+  Pressable,
+  StyleSheet,
+  TextInput,
+  View,
+  type TextInputProps,
+} from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, { useAnimatedProps } from "react-native-reanimated";
+import { scheduleOnUI } from "react-native-worklets";
 
 //import types
 import type { HeaderProps } from "@/types/header";
 
 //import constants
-import { colors, fontWeight } from "@/constants";
+import { colors, fontSize, fontWeight } from "@/constants";
+import { useResponsive } from "@/hooks";
 
 //import components
 import TextComponent from "./text-component";
 
-const Header = ({ reloadGame, pauseGame, isPaused, score }: HeaderProps) => {
+const AnimatedScore = Animated.createAnimatedComponent(TextInput);
+
+const Header = ({
+  reloadGame,
+  pauseGame,
+  isPaused,
+  snapshot,
+  accessibleScore,
+}: HeaderProps) => {
+  const { fontSizeToRf } = useResponsive();
+  const scoreProps = useAnimatedProps<TextInputProps & { text: string }>(
+    () => ({
+      text: String(snapshot.get().score),
+      defaultValue: String(snapshot.get().score),
+    }),
+  );
+  const pause = Gesture.Tap().onEnd((_event, success) => {
+    if (success) pauseGame();
+  });
   return (
     <View style={styles.container}>
-      <Pressable onPress={reloadGame}>
+      <Pressable
+        accessibilityRole="button"
+        accessibilityLabel="Restart game"
+        hitSlop={8}
+        onPress={reloadGame}
+      >
         <SymbolView
           name={{
             ios: "restart.circle",
@@ -29,23 +62,35 @@ const Header = ({ reloadGame, pauseGame, isPaused, score }: HeaderProps) => {
           styleProfile={"large4"}
           containerStyle={styles.food}
         />
-        <TextComponent
-          text={score.toString()}
-          color={colors.primary}
-          styleProfile={"bigger1"}
-          fontWeight={fontWeight[700]}
+        <AnimatedScore
+          testID="game-score"
+          accessibilityLabel={`Score: ${accessibleScore}`}
+          animatedProps={scoreProps}
+          editable={false}
+          caretHidden
+          pointerEvents="none"
+          underlineColorAndroid="transparent"
+          style={[styles.score, { fontSize: fontSizeToRf(fontSize.bigger) }]}
         />
       </View>
-      <Pressable onPress={pauseGame}>
-        <SymbolView
-          name={{
-            ios: isPaused ? "play.circle" : "pause.circle",
-            android: isPaused ? "play_circle" : "pause_circle",
-          }}
-          size={35}
-          tintColor={colors.primary}
-        />
-      </Pressable>
+      <GestureDetector gesture={pause}>
+        <View
+          accessible
+          accessibilityRole="button"
+          accessibilityLabel={isPaused ? "Resume game" : "Pause game"}
+          hitSlop={8}
+          onAccessibilityTap={() => scheduleOnUI(pauseGame)}
+        >
+          <SymbolView
+            name={{
+              ios: isPaused ? "play.circle" : "pause.circle",
+              android: isPaused ? "play_circle" : "pause_circle",
+            }}
+            size={35}
+            tintColor={colors.primary}
+          />
+        </View>
+      </GestureDetector>
     </View>
   );
 };
@@ -72,5 +117,12 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     gap: 7,
     alignItems: "center",
+  },
+  score: {
+    color: colors.primary,
+    fontWeight: fontWeight[700],
+    padding: 0,
+    minWidth: 48,
+    textAlign: "center",
   },
 });

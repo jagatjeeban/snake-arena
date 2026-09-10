@@ -1,5 +1,4 @@
 import { router, useLocalSearchParams } from "expo-router";
-import { StyleSheet } from "react-native";
 
 //import components
 import { Game } from "@/components";
@@ -33,5 +32,3 @@ const Playground = () => {
 };
 
 export default Playground;
-
-const styles = StyleSheet.create({});

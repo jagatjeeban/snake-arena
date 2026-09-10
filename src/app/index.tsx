@@ -36,6 +36,8 @@ export default function Index() {
   return (
     <SafeAreaView style={styles.container}>
       <LottieView
+        // Metro resolves the bundled Lottie asset through require.
+        // eslint-disable-next-line @typescript-eslint/no-require-imports
         source={require("@/assets/animations/snake.lottie")}
         autoPlay
         loop
