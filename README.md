@@ -1,56 +1,145 @@
-# Welcome to your Expo app 👋
+# Snake Arena
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+Snake Arena is a mobile-first Snake application built with Expo and React Native. This guide covers development setup, code organization, validation, and build configuration.
 
-## Get started
+## Technology stack
 
-1. Install dependencies
+| Technology | Configured version / role |
+| --- | --- |
+| Expo | `~57.0.20` (SDK 57) |
+| React Native | `0.86.3` |
+| React | `19.2.3`, with React Compiler enabled |
+| TypeScript | `~6.0.3`, with strict checking |
+| Expo Router | `~57.0.19`, file-based navigation with typed routes |
+| Reanimated / Worklets | `4.5.1` / `0.10.1`, UI-thread movement and shared state |
+| Gesture Handler | `~2.32.0`, gesture input |
+| Bun | Dependency management and scripts; lockfile: `bun.lock` |
 
-   ```bash
-   npm install
-   ```
+[package.json](package.json) and [app.json](app.json) are the source of truth for versions and application configuration. The app targets iOS and Android in portrait orientation; a web development command and static web output are also configured. Web behavior must be validated separately.
 
-2. Start the app
+## Getting started
 
-   ```bash
-   npx expo start
-   ```
+### Prerequisites
 
-In the output, you'll find options to open the app in a
+- Bun installed and available in your shell.
+- Node.js meeting the [Expo SDK 57 requirements](https://docs.expo.dev/versions/v57.0.0/) (minimum `22.13.x`).
+- For local iOS builds: macOS, Xcode compatible with SDK 57, and an iOS Simulator runtime.
+- For local Android builds: Android Studio, Android SDK, a compatible JDK, and an emulator or connected development device.
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
+See Expo's [local development setup](https://docs.expo.dev/guides/local-app-development/) for native toolchain configuration.
 
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
+### Install and run
 
-## Get a fresh project
-
-When you're ready, run:
+From the repository root, install dependencies:
 
 ```bash
-npm run reset-project
+bun install
 ```
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
+Build and launch the development client for your target platform:
 
-### Other setup steps
+```bash
+# iOS
+bun run ios
 
-- To set up ESLint for linting, run `npx expo lint`, or follow our guide on ["Using ESLint and Prettier"](https://docs.expo.dev/guides/using-eslint/)
-- If you'd like to set up unit testing, follow our guide on ["Unit Testing with Jest"](https://docs.expo.dev/develop/unit-testing/)
-- Learn more about the TypeScript setup in this template in our guide on ["Using TypeScript"](https://docs.expo.dev/guides/typescript/)
+# Android
+bun run android
+```
 
-## Learn more
+These commands generate native projects when absent, compile and install the app, and start Metro. The project already includes `expo-dev-client`; use a [development build](https://docs.expo.dev/develop/development-builds/introduction/) for this workflow.
 
-To learn more about developing your project with Expo, look at the following resources:
+For subsequent JavaScript or TypeScript changes, start Metro and open the installed development client:
 
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
+```bash
+bun run start
+```
 
-## Join the community
+Native dependency or native configuration changes require regenerating the native projects as appropriate and rebuilding the development client. See the development-build guide linked above.
 
-Join our community of developers creating universal apps.
+To start the configured web development server:
 
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+```bash
+bun run web
+```
+
+## Commands and validation
+
+| Command | Purpose |
+| --- | --- |
+| `bun run start` | Start the Expo development server |
+| `bun run ios` | Build and run iOS locally |
+| `bun run android` | Build and run Android locally |
+| `bun run web` | Start web development |
+| `bun run lint` | Run Expo ESLint |
+| `bunx tsc --noEmit` | Validate TypeScript without emitting files |
+| `bunx expo-doctor` | Diagnose dependency and configuration issues |
+
+There is currently no automated test suite or test script configured in this checkout. Lint and TypeScript validation are static checks; they do not verify runtime behavior.
+
+Run lint and TypeScript validation before completing changes. Validate affected gameplay, UI, and lifecycle flows in development builds on the relevant platforms. [AGENTS.md](AGENTS.md) contains additional validation expectations, but its references to the former test command and suite are outdated.
+
+## Project structure
+
+```text
+src/
+  app/                    Expo Router routes and root layout
+  components/             Reusable UI and game presentation
+  hooks/                  Session lifecycle, board measurement, responsive layout
+  features/game/
+    engine/               Transitions, movement snapshots, food placement, event guards
+    config/               Difficulty, controls, initial state, board geometry
+  constants/              Shared colors, strings, font sizes, and weights
+  themes/                 Reusable styling conventions
+  types/                  Shared UI, engine, geometry, and session types
+  utils/                  Focused reusable helpers
+assets/                   Images, fonts, animations, and icon assets
+```
+
+The entry point is `expo-router/entry`. `src/app/index.tsx` selects the session difficulty and navigates to `src/app/playground.tsx`, which composes the game and handles completion navigation. Keep non-route modules outside `src/app`.
+
+### Engine and rendering
+
+- `useSnakeGame` coordinates the engine, input, renderer capacity, and session lifecycle. `useGameBoard` owns board measurement; components render the resulting state.
+- Reanimated's `useFrameCallback` advances movement on the UI thread. The engine prepares a destination, interpolates one shared movement snapshot, then commits at cell arrival. Snake growth, food relocation, and score changes use that same arrival boundary.
+- Frame-by-frame movement stays in shared values and worklets. React receives session, score, and capacity updates without driving every animation frame. Renderer acknowledgements ensure segment slots are ready before movement needs them.
+- Explicit elapsed time and seeded food selection make engine transitions reproducible. Preserve worklet compatibility and keep React hooks and device APIs outside engine functions.
+- Lifecycle handling coordinates app activity, route focus, and layout changes. Pause/resume resets frame timing so background time is not replayed. Session identity checks reject stale callbacks, and completion is delivered only once per mounted session.
+
+Keep game rules in `features/game/engine`, tuning and geometry in `features/game/config`, and lifecycle orchestration in hooks.
+
+## Native and EAS builds
+
+`ios/` and `android/` are generated native projects and are ignored by Git. Configure native behavior through `app.json` and supported Expo config plugins rather than relying on manual edits to generated files.
+
+[eas.json](eas.json) defines these profiles:
+
+| Profile | Configuration |
+| --- | --- |
+| `development` | Internal development client; iOS targets the simulator (`ios.simulator: true`), not a physical iPhone |
+| `preview` | Internal distribution |
+| `production` | Automatic app-version increments; production submission profile configured |
+
+EAS uses remote app-version management and requires CLI version `>= 20.5.1`. The app is already linked to an EAS project in `app.json`. Cloud builds require an Expo account with access to that project and any necessary signing credentials.
+
+Example development builds:
+
+```bash
+bunx eas-cli build --profile development --platform ios
+bunx eas-cli build --profile development --platform android
+```
+
+Select `preview` or `production` for the corresponding distribution build. See the official [EAS Build documentation](https://docs.expo.dev/build/introduction/) for cloud build and signing setup.
+
+## Development conventions
+
+Read [AGENTS.md](AGENTS.md) for architecture, code style, engine invariants, and platform validation requirements.
+
+- Use the `@/` alias for modules under `src` across folder boundaries and reuse existing constants, types, helpers, and components.
+- Install Expo and React Native dependencies through Expo's compatibility-aware installer:
+
+  ```bash
+  bunx expo install <package>
+  ```
+
+- Consult the [SDK 57 documentation](https://docs.expo.dev/versions/v57.0.0/) before changing Expo APIs. Use the [Expo documentation index](https://docs.expo.dev/llms.txt) to locate other guides.
+- Preserve application identifiers and native configuration unless explicitly changing them. Keep credentials, generated native projects, and build outputs out of commits.

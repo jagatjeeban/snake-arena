@@ -38,9 +38,7 @@
     "typescript": "~6.0.3"
   },
   "scripts": {
-    "test": "bun build ./tests/snake-engine.test.ts --target=node --outfile=./.test-build/snake-engine.test.mjs && node --test ./.test-build/snake-engine.test.mjs",
     "start": "expo start",
-    "reset-project": "node ./scripts/reset-project.js",
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
