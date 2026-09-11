@@ -22,6 +22,18 @@ import TextComponent from "./text-component";
 
 const AnimatedScore = Animated.createAnimatedComponent(TextInput);
 
+/**
+ * Renders restart, score, and pause controls for the active game session. The
+ * visible score reads from the UI-thread snapshot for smooth updates, while
+ * `accessibleScore` mirrors meaningful changes on React for screen readers.
+ * @param props the active session controls and score state
+ * @param props.reloadGame starts a new session on the current board
+ * @param props.pauseGame toggles the engine between paused and active phases
+ * @param props.isPaused determines the pause control's icon and accessible label
+ * @param props.snapshot supplies the animated score without per-frame React renders
+ * @param props.accessibleScore supplies the score announced by assistive technology
+ * @returns the control bar displayed above the game board
+ */
 const Header = ({
   reloadGame,
   pauseGame,
@@ -30,15 +42,18 @@ const Header = ({
   accessibleScore,
 }: HeaderProps) => {
   const { fontSizeToRf } = useResponsive();
+
   const scoreProps = useAnimatedProps<TextInputProps & { text: string }>(
     () => ({
       text: String(snapshot.get().score),
       defaultValue: String(snapshot.get().score),
     }),
   );
+
   const pause = Gesture.Tap().onEnd((_event, success) => {
     if (success) pauseGame();
   });
+
   return (
     <View style={styles.container}>
       <Pressable

@@ -34,9 +34,11 @@ export const DIFFICULTY_CONFIGS = {
 } satisfies Record<DifficultyLevel, DifficultyConfig>;
 
 /**
- * function to get the difficulty config as per the selected difficulty level
- * @param difficultyLevel selected difficulty level
- * @returns difficulty config as per the difficulty level
+ * Maps the difficulty selected on the home screen to the engine's movement and
+ * scoring rules. The normal preset is the defensive fallback for an unexpected
+ * route value so the playground can still start with valid timing values.
+ * @param difficultyLevel the level received from the playground route
+ * @returns the matching tick timing, acceleration, and score configuration
  */
 export const getDifficultyConfig = (
   difficultyLevel: DifficultyLevel,

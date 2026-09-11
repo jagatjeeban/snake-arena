@@ -4,7 +4,7 @@ import { fontSize } from "@/constants";
 //import types
 import type { TextTheme } from "@/types/text-theme";
 
-//function to create text theme
+// Build one theme entry while keeping font-family support centralized for future use.
 const createTextTheme = (fontSize: number, fontFamily?: string): TextTheme => ({
   fontSize,
   //   fontFamily,
@@ -115,7 +115,12 @@ const textStyleMap = {
   ),
 } as const;
 
-//function to get the text style
+/**
+ * Resolves a named Snake Arena typography profile for `TextComponent` and falls
+ * back to the standard body size when no profile is requested.
+ * @param req the optional shared typography profile name
+ * @returns the profile's base text style before component-level overrides
+ */
 const textTheme = (req?: TextThemeName): TextTheme =>
   req ? textStyleMap[req] : defaultTextStyle;
 

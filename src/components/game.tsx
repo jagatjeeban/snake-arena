@@ -16,6 +16,13 @@ import Food from "./food";
 import Header from "./header";
 import Snake from "./snake";
 
+/**
+ * Composes the playable screen while delegating board measurement and session
+ * lifecycle to hooks. It connects the header controls and gesture surface to
+ * the same UI-thread snapshot used by the snake and food renderers.
+ * @param props the selected difficulty and game-over callback from the route
+ * @returns the safe-area game shell containing the header and measured board
+ */
 const Game = (props: GameProps) => {
   //hooks
   const board = useGameBoard();

@@ -17,6 +17,13 @@ const difficultyLevels: [DifficultyLevel, DifficultyLevel, DifficultyLevel] = [
   "hard",
 ];
 
+/**
+ * Presents the supported speed presets on the home screen and reports the
+ * player's selection to the route-level navigation handler.
+ * @param props the difficulty-selection behavior
+ * @param props.onSelect receives the selected Snake Arena difficulty level
+ * @returns the difficulty heading and animated preset buttons
+ */
 const SelectDifficulty = ({ onSelect }: SelectDifficultyProps) => {
   return (
     <View style={styles.container}>

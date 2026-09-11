@@ -38,7 +38,17 @@ type TextComponentProps = {
 };
 
 /**
- * Renders application text with shared typography and responsive sizing.
+ * Renders app text through Snake Arena's typography and responsive-size rules.
+ * It also provides the shared required marker and optional press behavior so
+ * screens do not recreate those conventions independently.
+ * @param props the text content, typography overrides, and optional interaction
+ * @param props.text the visible string to render
+ * @param props.styleProfile selects a shared text-theme size
+ * @param props.customFontSize overrides the profile's base font size
+ * @param props.customStyle applies final text-style overrides, including line height
+ * @param props.required appends the shared required-field marker when true
+ * @param props.clickEvent enables the press wrapper when supplied
+ * @returns responsive application text inside an optional press target
  */
 const TextComponent = ({
   containerStyle = {},
@@ -58,9 +68,11 @@ const TextComponent = ({
   fontFamily,
 }: TextComponentProps) => {
   const { fontSizeToRf } = useResponsive();
+
   const resolvedTextStyle = textTheme(styleProfile);
   const baseFontSize = customFontSize ?? resolvedTextStyle.fontSize ?? 14;
   const resolvedFontSize = fontSizeToRf(baseFontSize);
+
   //   const resolvedFontFamily = fontFamily ?? resolvedTextStyle.fontFamily;
   const resolvedLineHeight =
     customStyle?.lineHeight ?? Math.round(resolvedFontSize * 1.15); // avoid clipping descenders on some fonts

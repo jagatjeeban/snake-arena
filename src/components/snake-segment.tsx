@@ -15,6 +15,13 @@ import { segmentPosition } from "@/features/game/engine/movement-snapshot";
 import { Direction } from "@/types/game";
 import type { SnakeSegmentProps } from "@/types/snake-segment";
 
+/**
+ * Rotates the head's eyes toward the engine's current movement direction. It
+ * reads the shared snapshot on the UI thread so turns do not wait for React.
+ * @param props the head segment's shared movement snapshot
+ * @param props.snapshot supplies the current snake direction
+ * @returns the animated pair of eyes rendered inside the head segment
+ */
 function HeadEyes({ snapshot }: Pick<SnakeSegmentProps, "snapshot">) {
   const eyeStyle = useAnimatedStyle(() => {
     const direction = snapshot.get().direction;
@@ -26,8 +33,10 @@ function HeadEyes({ snapshot }: Pick<SnakeSegmentProps, "snapshot">) {
           : direction === Direction.Up
             ? -90
             : 0;
+
     return { transform: [{ rotate: `${degrees}deg` }] };
   });
+
   return (
     <Animated.View style={[styles.eyes, eyeStyle]}>
       <View style={styles.eye} />
@@ -36,12 +45,22 @@ function HeadEyes({ snapshot }: Pick<SnakeSegmentProps, "snapshot">) {
   );
 }
 
+/**
+ * Renders one preallocated snake slot and interpolates its grid position from
+ * the shared movement snapshot. Unused slots stay mounted but invisible, which
+ * lets the snake grow without mounting views during a movement frame.
+ * @param props the segment index and shared game snapshot
+ * @param props.index identifies the head at zero and body slots thereafter
+ * @param props.snapshot supplies movement endpoints and interpolation progress
+ * @returns one animated segment, including eyes when it is the head
+ */
 const SnakeSegment = memo(function SnakeSegment({
   index,
   snapshot,
 }: SnakeSegmentProps) {
   const animatedStyle = useAnimatedStyle(() => {
     const position = segmentPosition(snapshot.get(), index);
+
     return {
       opacity: position ? 1 : 0,
       transform: [

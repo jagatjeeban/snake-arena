@@ -1,8 +1,10 @@
 /**
- * function to get the starting tick ms decrement value
- * @param startTickMs the starting value of tick ms
- * @param minTickMs the minimum value of tick ms allowed
- * @returns the starting value of tick ms decrement
+ * Calculates the first step in Snake Arena's progressively smaller speed-up
+ * sequence. Decreasing the decrement by one after each food pickup lets the
+ * engine approach the minimum tick duration smoothly instead of overshooting it.
+ * @param startTickMs the starting movement duration in milliseconds
+ * @param minTickMs the fastest allowed movement duration in milliseconds
+ * @returns the initial whole-millisecond decrement for the speed-up sequence
  */
 export const getTickMsDecrement = (
   startTickMs: number,
@@ -11,5 +13,6 @@ export const getTickMsDecrement = (
   const startTickMsDecrement = Math.ceil(
     (Math.sqrt(1 + 8 * (startTickMs - minTickMs)) - 1) / 2,
   );
+
   return startTickMsDecrement;
 };

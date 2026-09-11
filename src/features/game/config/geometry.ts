@@ -11,6 +11,12 @@ export const FOOD_OFFSET = (CELL_SIZE - FOOD_SIZE) / 2;
 // destination screen settles. Start once from the latest measured grid.
 export const INITIAL_LAYOUT_SETTLE_MS = 1_000;
 
+/**
+ * Supplies valid placeholder bounds before React Native reports the board's
+ * first layout. The game hook checks readiness before starting, so this boundary
+ * exists to keep its return shape safe during the initial render.
+ * @returns a single-cell inclusive boundary at the grid origin
+ */
 export const getDefaultBoundary = (): Boundary => ({
   xMax: 0,
   xMin: 0,

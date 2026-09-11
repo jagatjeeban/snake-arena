@@ -3,13 +3,13 @@ import { useWindowDimensions } from "react-native";
 type PercentValue = string | number;
 
 /**
- * Normalizes a numeric input that may be passed as a number, numeric string,
- * or percentage string and returns it as a finite number.
- *
- * @param {number|string} value Input value to validate and normalize.
- * @param {string} inputName Human-readable input label used in the error message.
- * @returns {number} The normalized finite numeric value.
- * @throws {TypeError} Throws when the input cannot be converted to a valid finite number.
+ * Normalizes the number-like values accepted by Snake Arena's responsive
+ * helpers. Accepting `25`, `"25"`, and `"25%"` keeps call sites concise while
+ * failing early when an invalid layout value would otherwise produce `NaN`.
+ * @param value the number, numeric string, or percentage string to normalize
+ * @param inputName identifies the responsive helper in validation errors
+ * @returns the finite numeric portion of the supplied value
+ * @throws TypeError when the value cannot produce a finite number
  */
 const getValidatedNumericValue = (
   value: PercentValue,
@@ -48,45 +48,50 @@ const DESIGN_DIAGONAL = Math.sqrt(
 );
 
 /**
- * Custom hook for responsive layout across devices
- * @returns
+ * Builds responsive sizing helpers from the current window dimensions. Width
+ * and height percentages follow the device, while font scaling uses a stable
+ * 16:9 diagonal so Snake Arena typography scales consistently across aspect ratios.
+ * @returns current dimensions, orientation, percentage-based size helpers, and
+ * a converter from design font sizes to responsive font sizes
  */
 export const useResponsive = () => {
   const { width, height } = useWindowDimensions();
 
-  //returns responsive width
+  // Convert a percentage of the current window width into density-independent pixels.
   const rw = (percent: PercentValue): number =>
     (width * getValidatedNumericValue(percent, "rw")) / 100;
 
-  //returns responsive height
+  // Convert a percentage of the current window height into density-independent pixels.
   const rh = (percent: PercentValue): number =>
     (height * getValidatedNumericValue(percent, "rh")) / 100;
 
-  //returns responsive font size
+  // Scale typography against a normalized diagonal derived from the shortest side.
   const rf = (percent: PercentValue): number => {
     const validatedPercent = getValidatedNumericValue(percent, "rf");
     const widthDimension = Math.min(width, height);
     const aspectHeight = (16 / 9) * widthDimension;
     const diagonal = Math.sqrt(aspectHeight ** 2 + widthDimension ** 2);
+
     return (diagonal * validatedPercent) / 100;
   };
 
-  //current device orientation
+  // Expose orientation for layout decisions that cannot use one fixed dimension.
   const isLandscape: boolean = width > height;
 
-  //returns responsive size based on device orientation (for icons, image dimensions e.t.c.)
+  // Scale icons and images against the axis that best fits the current orientation.
   const adaptiveSize = (percent: PercentValue) => {
     if (isLandscape) return rh(percent);
     else return rw(percent);
   };
 
-  //converts and returns fixed font size to responsive font size
+  // Convert a font size from the 375x812 design reference into the current scale.
   const fontSizeToRf = (fontSize: number) => {
     const validatedFontSize = getValidatedNumericValue(
       fontSize,
       "fontSizeToRf",
     );
     const percentage = (validatedFontSize * 100) / DESIGN_DIAGONAL;
+
     return rf(percentage);
   };
 

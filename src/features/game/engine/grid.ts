@@ -5,24 +5,30 @@ import { Direction } from "@/types/game";
 import type { Boundary, Coordinate } from "@/types/game";
 
 /**
- * Compare two grid coordinates without allocating intermediate values.
- * @param a the first grid coordinate
- * @param b the second grid coordinate
- * @returns whether both coordinates identify the same cell
+ * Compares two cells for food pickup, duplicate-start validation, and snake
+ * collision checks. This stays worklet-safe because the engine also calls it on
+ * the UI thread during movement.
+ * @param a the first Snake Arena grid coordinate
+ * @param b the second Snake Arena grid coordinate
+ * @returns whether both coordinates identify the same board cell
  */
 export function sameCell(a: Coordinate, b: Coordinate): boolean {
   "worklet";
+
   return a.x === b.x && a.y === b.y;
 }
 
 /**
- * Check that a cell uses integer coordinates within the board.
+ * Verifies that an engine cell can be rendered on the measured game board.
+ * Integer validation protects the cell-based movement model as well as the
+ * inclusive boundary check.
  * @param point the grid coordinate to validate
- * @param bounds the inclusive board limits
- * @returns whether the point has integer coordinates inside the board
+ * @param bounds the measured board's inclusive cell limits
+ * @returns whether the point is a complete, renderable board cell
  */
 export function inBounds(point: Coordinate, bounds: Boundary): boolean {
   "worklet";
+
   return (
     Number.isInteger(point.x) &&
     Number.isInteger(point.y) &&
@@ -34,16 +40,19 @@ export function inBounds(point: Coordinate, bounds: Boundary): boolean {
 }
 
 /**
- * Get the adjacent cell in the requested direction.
- * @param head the current head coordinate
- * @param direction the requested movement direction
- * @returns the adjacent head coordinate, which may be outside the board
+ * Calculates the snake head's next cell for one engine move. Boundary handling
+ * deliberately happens later in `prepare`, allowing this helper to remain a
+ * simple direction-to-coordinate conversion.
+ * @param head the snake's currently committed head coordinate
+ * @param direction the direction accepted for the next move
+ * @returns the adjacent head coordinate, including an out-of-bounds attempt
  */
 export function nextHeadPosition(
   head: Coordinate,
   direction: Direction,
 ): Coordinate {
   "worklet";
+
   return {
     x:
       head.x +
@@ -59,16 +68,18 @@ export function nextHeadPosition(
 }
 
 /**
- * Check whether a direction reverses the current movement.
- * @param current the current movement direction
- * @param direction the proposed movement direction
- * @returns whether the proposed direction reverses the current direction
+ * Detects a 180-degree turn that would send the head directly into the first
+ * body segment. `queueDirection` uses this to reject impossible swipe input.
+ * @param current the direction of the active or committed move
+ * @param direction the direction requested by the player's swipe
+ * @returns whether the requested direction is the exact opposite of the current one
  */
 export function isOppositeDirection(
   current: Direction,
   direction: Direction,
 ): boolean {
   "worklet";
+
   return (
     (current === Direction.Right && direction === Direction.Left) ||
     (current === Direction.Left && direction === Direction.Right) ||

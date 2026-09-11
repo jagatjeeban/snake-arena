@@ -5,12 +5,15 @@ import { Direction } from "@/types/game";
 import type { Coordinate, EngineState, MovementSnapshot } from "@/types/game";
 
 /**
- * Expose interpolated movement inputs while retaining committed food and score.
- * @param state the current engine state, or null before initialization
- * @returns movement endpoints and progress with committed food and score, or an empty snapshot
+ * Converts internal engine state into the small UI-thread model consumed by the
+ * snake, food, and score renderers. While growth waits for additional mounted
+ * segment slots, it exposes only committed cells to avoid drawing missing views.
+ * @param state the current engine state, or null before board initialization
+ * @returns renderable movement endpoints, progress, direction, food, and score
  */
 export function movementSnapshot(state: EngineState | null): MovementSnapshot {
   "worklet";
+
   if (!state)
     return {
       from: [],
@@ -20,10 +23,12 @@ export function movementSnapshot(state: EngineState | null): MovementSnapshot {
       food: null,
       score: 0,
     };
+
   const waiting =
     state.phase === "waiting-for-renderer" ||
     (state.phase === "paused" && state.pausedPhase === "waiting-for-renderer");
   const pending = waiting ? null : state.pending;
+
   return {
     from: pending?.from ?? state.committed.snake,
     to: pending?.to ?? state.committed.snake,
@@ -35,10 +40,12 @@ export function movementSnapshot(state: EngineState | null): MovementSnapshot {
 }
 
 /**
- * Interpolate a mounted segment between its source and destination cells.
- * @param snapshot the movement endpoints and interpolation progress
- * @param index the zero-based snake segment index
- * @returns the interpolated coordinate, or null when either endpoint is missing
+ * Resolves one preallocated segment's visual position for the current animation
+ * frame. Slots beyond the active snake return null so their mounted views remain
+ * hidden until growth needs them.
+ * @param snapshot the renderer-facing movement endpoints and interpolation progress
+ * @param index the zero-based slot index, where zero is the snake head
+ * @returns the interpolated grid coordinate, or null when the slot is inactive
  */
 export function segmentPosition(
   snapshot: MovementSnapshot,

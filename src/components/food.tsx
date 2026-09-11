@@ -10,9 +10,18 @@ import { CELL_SIZE, FOOD_SIZE } from "@/features/game/config";
 //import types
 import type { MovementSnapshot } from "@/types/game";
 
+/**
+ * Draws the apple at the engine's committed food cell without causing React
+ * renders on animation frames. The shared snapshot keeps position updates on
+ * the UI thread and hides the apple when a full board has no free cell.
+ * @param props the food presentation inputs
+ * @param props.snapshot the UI-thread game snapshot shared with the board renderer
+ * @returns the animated apple overlay positioned on the game grid
+ */
 const Food = ({ snapshot }: { snapshot: SharedValue<MovementSnapshot> }) => {
   const style = useAnimatedStyle(() => {
     const food = snapshot.get().food;
+
     return {
       opacity: food ? 1 : 0,
       transform: [

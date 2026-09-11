@@ -14,6 +14,11 @@ import { SelectDifficulty, TextComponent } from "@/components";
 import { DifficultyLevel } from "@/types/game";
 import { router } from "expo-router";
 
+/**
+ * Renders Snake Arena's landing screen and starts a game with the difficulty
+ * selected by the player.
+ * @returns the welcome animation and difficulty-selection controls
+ */
 export default function Index() {
   //hooks
   const { width, height } = useResponsive();
@@ -25,7 +30,7 @@ export default function Index() {
     };
   }, [width, height]);
 
-  //function to navigate to the game
+  // Open a new playground route with the selected difficulty in its route params.
   const navigateToGame = (difficulty: DifficultyLevel): void => {
     router.push({
       pathname: "/playground",
