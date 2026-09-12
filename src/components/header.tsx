@@ -15,6 +15,8 @@ import type { HeaderProps } from "@/types/header";
 
 //import constants
 import { colors, fontSize, fontWeight } from "@/constants";
+
+//import hooks
 import { useResponsive } from "@/hooks";
 
 //import components

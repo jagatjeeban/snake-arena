@@ -1,3 +1,4 @@
+import { router } from "expo-router";
 import LottieView from "lottie-react-native";
 import { useMemo } from "react";
 import { StyleSheet, ViewStyle } from "react-native";
@@ -11,8 +12,9 @@ import { useResponsive } from "@/hooks";
 
 //import components
 import { SelectDifficulty, TextComponent } from "@/components";
+
+//import types
 import { DifficultyLevel } from "@/types/game";
-import { router } from "expo-router";
 
 /**
  * Renders Snake Arena's landing screen and starts a game with the difficulty
@@ -64,8 +66,6 @@ export default function Index() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    // alignItems: "center",
-    // justifyContent: "center",
     backgroundColor: colors.background,
   },
 });

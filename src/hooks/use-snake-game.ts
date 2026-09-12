@@ -36,6 +36,7 @@ import type { useGameBoard } from "./use-game-board";
 
 //import engine helpers
 import { movementSnapshot } from "@/features/game/engine/movement-snapshot";
+import { selectGameHaptic } from "@/features/game/engine/select-game-haptic";
 import {
   acceptsSessionEvent,
   claimCompletion,
@@ -49,10 +50,14 @@ import {
   resumeEngine,
 } from "@/features/game/engine/snake-engine";
 
+//import utilities
+import { triggerGameHaptic } from "@/utils";
+
 //import types
 import type {
   EngineEvent,
   EngineState,
+  GameHapticSnapshot,
   GameProps,
   SessionEvents,
 } from "@/types/game";
@@ -183,6 +188,28 @@ export function useSnakeGame(
     },
   );
 
+  // Observe committed outcomes on the UI thread, consuming even suppressed events.
+  useAnimatedReaction(
+    (): GameHapticSnapshot | null => {
+      const state = runtime.get();
+
+      return state
+        ? {
+            sessionId: state.sessionId,
+            score: state.committed.score,
+            terminalReason: state.terminalReason,
+            phase: state.phase,
+            active: interactionEnabled.get(),
+          }
+        : null;
+    },
+    (current, previous) => {
+      const haptic = selectGameHaptic(current, previous);
+
+      if (haptic) triggerGameHaptic(haptic);
+    },
+  );
+
   // Invalidate callbacks and clear this session when the hook unmounts.
   useEffect(() => {
     const sessionEvents = events.current;
@@ -195,10 +222,11 @@ export function useSnakeGame(
       const sessionId = sessionEvents.sessionId;
 
       scheduleOnUI(() => {
+        interactionEnabled.set(false);
         if (runtime.get()?.sessionId === sessionId) runtime.set(null);
       });
     };
-  }, [frameCallback, runtime]);
+  }, [frameCallback, interactionEnabled, runtime]);
 
   // Start a fresh seeded session using the current measured board.
   const startSession = useCallback(

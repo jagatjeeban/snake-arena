@@ -1,5 +1,5 @@
 //import utility functions
-import { getTickMsDecrement } from "@/utils";
+import { getTickMsDecrement } from "@/utils/get-tickms-decrement";
 
 //import types
 import { DifficultyConfig, DifficultyLevel } from "@/types/game";

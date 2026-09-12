@@ -1,4 +1,4 @@
-import { PressableScale, PressablesConfig } from "pressto";
+import { PressableScale } from "pressto";
 import { StyleSheet, View } from "react-native";
 
 //import components
@@ -35,22 +35,18 @@ const SelectDifficulty = ({ onSelect }: SelectDifficultyProps) => {
       />
       <View style={styles.btnContainer}>
         {difficultyLevels.map((level: DifficultyLevel, index: number) => (
-          <PressablesConfig
+          <PressableScale
             key={index}
-            config={{ baseScale: 1, minScale: 1.05 }}
+            onPress={() => onSelect(level)}
+            style={styles.difficultyBtn}
           >
-            <PressableScale
-              onPress={() => onSelect(level)}
-              style={styles.difficultyBtn}
-            >
-              <TextComponent
-                text={strings[level]}
-                color={colors.background}
-                fontWeight={fontWeight[500]}
-                styleProfile={"large2"}
-              />
-            </PressableScale>
-          </PressablesConfig>
+            <TextComponent
+              text={strings[level]}
+              color={colors.background}
+              fontWeight={fontWeight[500]}
+              styleProfile={"large2"}
+            />
+          </PressableScale>
         ))}
       </View>
     </View>
