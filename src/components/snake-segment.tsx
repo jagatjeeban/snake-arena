@@ -105,8 +105,8 @@ const styles = StyleSheet.create({
   },
   eye: {
     backgroundColor: colors.background,
-    width: 3,
-    height: 3,
-    borderRadius: 1.5,
+    width: 2,
+    height: 2,
+    borderRadius: 1,
   },
 });
