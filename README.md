@@ -12,6 +12,7 @@ Snake Arena is a mobile-first Snake application built with Expo and React Native
 | TypeScript | `~6.0.3`, with strict checking |
 | Expo Router | `~57.0.19`, file-based navigation with typed routes |
 | Reanimated / Worklets | `4.5.1` / `0.10.1`, UI-thread movement and shared state |
+| React Native Skia | `2.6.2`, native continuous snake renderer |
 | Gesture Handler | `~2.32.0`, gesture input |
 | Bun | Dependency management and scripts; lockfile: `bun.lock` |
 
@@ -72,11 +73,12 @@ bun run web
 | `bun run web` | Start web development |
 | `bun run lint` | Run Expo ESLint |
 | `bunx tsc --noEmit` | Validate TypeScript without emitting files |
+| `bun run test` | Bundle pure geometry/session tests with Bun, then run Node's test runner |
 | `bunx expo-doctor` | Diagnose dependency and configuration issues |
 
-There is currently no automated test suite or test script configured in this checkout. Lint and TypeScript validation are static checks; they do not verify runtime behavior.
+Geometry and renderer/session regression tests live in `tests/`; generated test bundles are ignored in `.test-build/`. These tests exercise deterministic movement, taper, turns, and engine integration without loading native Skia. They do not replace native visual or performance checks.
 
-Run lint and TypeScript validation before completing changes. Validate affected gameplay, UI, and lifecycle flows in development builds on the relevant platforms. [AGENTS.md](AGENTS.md) contains additional validation expectations, but its references to the former test command and suite are outdated.
+Run lint, TypeScript validation, and tests before completing rendering changes. Validate affected gameplay, UI, and lifecycle flows in development builds on the relevant platforms.
 
 ## Project structure
 
@@ -88,6 +90,7 @@ src/
   features/game/
     engine/               Transitions, movement snapshots, food placement, event guards
     config/               Difficulty, controls, initial state, board geometry
+    rendering/            Pure snake trail geometry and native Skia path adapter
   constants/              Shared colors, strings, font sizes, and weights
   themes/                 Reusable styling conventions
   types/                  Shared UI, engine, geometry, and session types
@@ -101,11 +104,15 @@ The entry point is `expo-router/entry`. `src/app/index.tsx` selects the session 
 
 - `useSnakeGame` coordinates the engine, input, renderer capacity, and session lifecycle. `useGameBoard` owns board measurement; components render the resulting state.
 - Reanimated's `useFrameCallback` advances movement on the UI thread. The engine prepares a destination, interpolates one shared movement snapshot, then commits at cell arrival. Snake growth, food relocation, and score changes use that same arrival boundary.
-- Frame-by-frame movement stays in shared values and worklets. React receives session, score, and capacity updates without driving every animation frame. Renderer acknowledgements ensure segment slots are ready before movement needs them.
+- Frame-by-frame movement stays in shared values and worklets. React receives session, score, and capacity updates without driving every animation frame. Renderer acknowledgements ensure web segment slots or native logical drawing capacity are ready before movement needs them.
+- `snake.native.tsx` draws a continuous body, tapered tail, highlight, oval head, and eyes in one Skia canvas. It consumes the existing snapshot, preserves cell-center endpoints, and rounds only the rendered route. `snake.tsx` and `snake-segment.tsx` remain the web/default renderer; web does not load Skia or CanvasKit.
+- Native UI checks should target `snake-canvas`; individual canvas shapes are not native views and do not expose the web renderer's `snake-head` selector. Controls and accessible score remain React components. Reduced motion disables the short head rotation; essential game movement still follows the engine.
 - Explicit elapsed time and seeded food selection make engine transitions reproducible. Preserve worklet compatibility and keep React hooks and device APIs outside engine functions.
 - Lifecycle handling coordinates app activity, route focus, and layout changes. Pause/resume resets frame timing so background time is not replayed. Session identity checks reject stale callbacks, and completion is delivered only once per mounted session.
 
 Keep game rules in `features/game/engine`, tuning and geometry in `features/game/config`, and lifecycle orchestration in hooks.
+
+After installing Skia, rebuild both native development clients. Bun trusts only Skia's required binary-install script via `trustedDependencies`; do not enable unrelated lifecycle scripts. For visual checks, cover tight turns in both directions, growth at a corner, adjacent body sections, a short tail, pause/resume, restart, and nearly full boards. Measure long-snake frame times on physical devices in release builds before making performance claims.
 
 ## Native and EAS builds
 

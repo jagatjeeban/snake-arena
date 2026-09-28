@@ -313,7 +313,8 @@ export function useSnakeGame(
     runtime,
   ]);
 
-  // React has committed the slot views before this acknowledgement reaches the UI runtime.
+  // React has committed web slots or the native canvas's logical capacity before
+  // this session-checked acknowledgement reaches the UI runtime.
   useEffect(() => {
     const { sessionId, capacity } = renderer;
 
