@@ -4,7 +4,7 @@ import type { SkPathBuilder } from "@shopify/react-native-skia";
 
 //import rendering configuration and types
 import { SNAKE_STYLE } from "./style";
-import type { RenderPoint, SnakeGeometry } from "./types";
+import type { RenderPoint, SnakeGeometry } from "@/types/game/rendering";
 
 // A clockwise trapezoid and clockwise disks share nonzero winding. All overlaps
 // are filled in one draw, avoiding holes and translucent seams at tight bends.
