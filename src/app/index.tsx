@@ -40,6 +40,12 @@ export default function Index() {
     });
   };
 
+  //function to handle the press on info buttons for difficulty levels
+  const handleDifficultyInformation = () => {
+    //handle the opening of a bottom sheet to describe how changing
+    // the difficulty levels changes the behaviour of the game.
+  }
+
   return (
     <SafeAreaView style={styles.container}>
       <LottieView
@@ -58,7 +64,10 @@ export default function Index() {
         fontWeight={fontWeight[800]}
         styleProfile={"largest3"}
       />
-      <SelectDifficulty onSelect={navigateToGame} />
+      <SelectDifficulty
+        onSelect={navigateToGame}
+        onInfoReq={handleDifficultyInformation}
+      />
     </SafeAreaView>
   );
 }

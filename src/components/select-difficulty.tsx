@@ -1,5 +1,6 @@
 import { PressableScale } from "pressto";
-import { StyleSheet, View } from "react-native";
+import { Pressable, StyleSheet, View } from "react-native";
+import { MaterialDesignIcons } from "@react-native-vector-icons/material-design-icons/static";
 
 //import components
 import TextComponent from "./text-component";
@@ -9,7 +10,10 @@ import { colors, fontWeight, strings } from "@/constants";
 
 //import types
 import { DifficultyLevel } from "@/types/game";
-import { SelectDifficultyProps } from "@/types/select-difficulty";
+import { SelectDifficultyProps } from "@/types/components";
+
+//import hooks
+import { useResponsive } from "@/hooks";
 
 const difficultyLevels: [DifficultyLevel, DifficultyLevel, DifficultyLevel] = [
   "easy",
@@ -24,29 +28,47 @@ const difficultyLevels: [DifficultyLevel, DifficultyLevel, DifficultyLevel] = [
  * @param props.onSelect receives the selected Snake Arena difficulty level
  * @returns the difficulty heading and animated preset buttons
  */
-const SelectDifficulty = ({ onSelect }: SelectDifficultyProps) => {
+const SelectDifficulty = ({ onSelect, onInfoReq }: SelectDifficultyProps) => {
+
+  const {fontSizeToRf} = useResponsive();
+
   return (
-    <View style={styles.container}>
-      <TextComponent
-        text={strings.selectDifficultyLevel}
-        color={colors.accent}
-        styleProfile={"large4"}
-        fontWeight={fontWeight[500]}
-      />
-      <View style={styles.btnContainer}>
+    <View style={styles.mainContainer}>
+      <View style={{
+        flexDirection: 'row',
+        alignItems: 'center',
+        gap: 15
+      }}>
+        <TextComponent
+          text={strings.selectDifficultyLevel}
+          color={colors.accent}
+          styleProfile={"large4"}
+          fontWeight={fontWeight[500]}
+        />
+        <Pressable onPress={onInfoReq}>
+          <MaterialDesignIcons
+            name={"information-slab-circle-outline"}
+            size={fontSizeToRf(22)}
+            color={colors.primary}
+          />
+        </Pressable>
+      </View>
+      <View style={styles.container}>
         {difficultyLevels.map((level: DifficultyLevel, index: number) => (
-          <PressableScale
-            key={index}
-            onPress={() => onSelect(level)}
-            style={styles.difficultyBtn}
-          >
-            <TextComponent
-              text={strings[level]}
-              color={colors.background}
-              fontWeight={fontWeight[500]}
-              styleProfile={"large2"}
-            />
-          </PressableScale>
+          <View key={index} style={styles.btnRowContainer}>
+            <PressableScale
+                key={index}
+                onPress={() => onSelect(level)}
+                style={styles.difficultyBtn}
+              >
+                <TextComponent
+                  text={strings[level]}
+                  color={colors.background}
+                  fontWeight={fontWeight[500]}
+                  styleProfile={"large2"}
+                />
+            </PressableScale>
+          </View>
         ))}
       </View>
     </View>
@@ -56,7 +78,7 @@ const SelectDifficulty = ({ onSelect }: SelectDifficultyProps) => {
 export default SelectDifficulty;
 
 const styles = StyleSheet.create({
-  container: {
+  mainContainer: {
     flex: 1,
     alignItems: "center",
     marginTop: 50,
@@ -69,5 +91,15 @@ const styles = StyleSheet.create({
     padding: 15,
     minWidth: "65%",
   },
-  btnContainer: { alignSelf: "center", marginTop: 20, gap: 10 },
+  container: {
+    alignSelf: "center",
+    marginTop: 20,
+    gap: 10
+  },
+  btnRowContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    justifyContent:'space-between'
+  }
 });

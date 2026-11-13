@@ -9,7 +9,7 @@ import { colors } from "@/constants";
 import { useGameBoard, useSnakeGame } from "@/hooks";
 
 //import types
-import type { GameProps } from "@/types/game";
+import type { GameProps } from "@/types/components";
 
 //import components
 import Food from "./food";

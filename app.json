@@ -37,7 +37,10 @@
           "image": "./assets/images/splash-icon.png",
           "imageWidth": 76
         }
-      ]
+      ],
+      "@react-native-vector-icons/material-design-icons",
+      "@react-native-vector-icons/fontawesome-free-solid",
+      "@react-native-vector-icons/fontawesome-free-regular"
     ],
     "experiments": {
       "typedRoutes": true,

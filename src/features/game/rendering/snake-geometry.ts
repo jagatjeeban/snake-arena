@@ -3,8 +3,7 @@ import { buildSnakeTrail, headAngle, roundTrail } from "./snake-trail";
 import { SNAKE_STYLE } from "./style";
 
 //import types
-import type { MovementSnapshot } from "@/types/game/engine";
-import type { RenderPoint, SnakeGeometry, TrailSample } from "@/types/game/rendering";
+import type { MovementSnapshot, RenderPoint, SnakeGeometry, TrailSample } from "@/types/game";
 
 /** Adds exact taper/fade boundaries even when the tail lies on one long straight. */
 export function taperTrail(points: RenderPoint[]): {

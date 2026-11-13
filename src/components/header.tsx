@@ -1,4 +1,4 @@
-import { SymbolView } from "expo-symbols";
+//import packages
 import {
   Pressable,
   StyleSheet,
@@ -7,20 +7,35 @@ import {
   type TextInputProps,
 } from "react-native";
 import { Gesture, GestureDetector } from "react-native-gesture-handler";
-import Animated, { useAnimatedProps } from "react-native-reanimated";
+import Animated, {
+  Easing,
+  ReduceMotion,
+  useAnimatedProps,
+  useAnimatedReaction,
+  useAnimatedStyle,
+  useSharedValue,
+  withSequence,
+  withTiming,
+} from "react-native-reanimated";
 import { scheduleOnUI } from "react-native-worklets";
-
-//import types
-import type { HeaderProps } from "@/types/header";
+import { MaterialDesignIcons } from "@react-native-vector-icons/material-design-icons/static";
 
 //import constants
 import { colors, fontSize, fontWeight } from "@/constants";
 
+//import components
+import TextComponent from "./text-component";
+
 //import hooks
 import { useResponsive } from "@/hooks";
 
-//import components
-import TextComponent from "./text-component";
+//import types
+import type { HeaderProps } from "@/types/components";
+
+//constants
+const SCORE_PULSE_SCALE = 1.2;
+const SCORE_PULSE_DURATION_MS = 300;
+const SCORE_PULSE_EASING = Easing.bezier(0.23, 1, 0.32, 1);
 
 const AnimatedScore = Animated.createAnimatedComponent(TextInput);
 
@@ -43,13 +58,46 @@ const Header = ({
   snapshot,
   accessibleScore,
 }: HeaderProps) => {
+  //hooks
   const { fontSizeToRf } = useResponsive();
+
+  const scoreSize = useSharedValue(1);
 
   const scoreProps = useAnimatedProps<TextInputProps & { text: string }>(
     () => ({
       text: String(snapshot.get().score),
       defaultValue: String(snapshot.get().score),
     }),
+  );
+  const animatedScoreStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scoreSize.get() }],
+  }));
+
+  // React to committed food scores on the UI thread; skip mount and reset on restart.
+  useAnimatedReaction(
+    () => snapshot.get().score,
+    (score, previousScore) => {
+      if (previousScore === null || score < previousScore) {
+        scoreSize.set(1);
+        return;
+      }
+
+      if (score > previousScore) {
+        scoreSize.set(
+          withSequence(
+            ReduceMotion.System,
+            withTiming(SCORE_PULSE_SCALE, {
+              duration: SCORE_PULSE_DURATION_MS / 2,
+              easing: SCORE_PULSE_EASING,
+            }),
+            withTiming(1, {
+              duration: SCORE_PULSE_DURATION_MS / 2,
+              easing: SCORE_PULSE_EASING,
+            }),
+          ),
+        );
+      }
+    },
   );
 
   const pause = Gesture.Tap().onEnd((_event, success) => {
@@ -64,13 +112,10 @@ const Header = ({
         hitSlop={8}
         onPress={reloadGame}
       >
-        <SymbolView
-          name={{
-            ios: "restart.circle",
-            android: "restart_alt",
-          }}
-          size={35}
-          tintColor={colors.primary}
+        <MaterialDesignIcons
+          name="restart"
+          size={fontSizeToRf(35)}
+          color={colors.primary}
         />
       </Pressable>
       <View style={styles.scoreContainer}>
@@ -87,7 +132,11 @@ const Header = ({
           caretHidden
           pointerEvents="none"
           underlineColorAndroid="transparent"
-          style={[styles.score, { fontSize: fontSizeToRf(fontSize.bigger) }]}
+          style={[
+            styles.score,
+            animatedScoreStyle,
+            { fontSize: fontSizeToRf(fontSize.bigger) },
+          ]}
         />
       </View>
       <GestureDetector gesture={pause}>
@@ -98,13 +147,10 @@ const Header = ({
           hitSlop={8}
           onAccessibilityTap={() => scheduleOnUI(pauseGame)}
         >
-          <SymbolView
-            name={{
-              ios: isPaused ? "play.circle" : "pause.circle",
-              android: isPaused ? "play_circle" : "pause_circle",
-            }}
-            size={35}
-            tintColor={colors.primary}
+          <MaterialDesignIcons
+            name={isPaused? "play-circle-outline": "pause-circle-outline"}
+            size={fontSizeToRf(35)}
+            color={colors.primary}
           />
         </View>
       </GestureDetector>

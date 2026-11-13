@@ -4,6 +4,9 @@
   "version": "1.0.0",
   "dependencies": {
     "@expo/ui": "~57.0.16",
+    "@react-native-vector-icons/fontawesome-free-regular": "^2.0.0",
+    "@react-native-vector-icons/fontawesome-free-solid": "^2.0.0",
+    "@react-native-vector-icons/material-design-icons": "^14.0.0",
     "@shopify/react-native-skia": "2.6.2",
     "expo": "~57.0.20",
     "expo-constants": "~57.0.17",
