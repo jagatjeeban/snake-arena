@@ -102,7 +102,6 @@ export const useResponsive = () => {
     adaptiveSize,
     rw,
     rh,
-    rf,
     fontSizeToRf,
   };
 };
