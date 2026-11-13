@@ -2,11 +2,6 @@
 import { DifficultyConfig } from "./difficulty";
 import type { Phase, TerminalReason } from "./engine";
 
-export type GestureEventType = {
-  translationX: number;
-  translationY: number;
-};
-
 export type GameProps = {
   difficulty: DifficultyConfig;
   onGameOver: () => void;

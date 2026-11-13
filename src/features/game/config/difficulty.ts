@@ -1,16 +1,5 @@
-//import utility functions
-import { getTickMsDecrement } from "@/utils/get-tickms-decrement";
-
 //import types
 import { DifficultyConfig, DifficultyLevel } from "@/types/game";
-
-export const INITIAL_TICK_MS = 200;
-export const MIN_TICK_MS = 30;
-export const INITIAL_TICK_MS_DECREMENT = getTickMsDecrement(
-  INITIAL_TICK_MS,
-  MIN_TICK_MS,
-);
-export const SCORE_INCREMENT = 5;
 
 export const DIFFICULTY_CONFIGS = {
   easy: {

@@ -33,11 +33,8 @@ export const useGameBoard = () => {
   return {
     onLayout,
     ready,
-    cellSize: CELL_SIZE,
     columns,
     rows,
-    boardWidth: columns * CELL_SIZE,
-    boardHeight: rows * CELL_SIZE,
     bounds: useMemo(
       () =>
         ready

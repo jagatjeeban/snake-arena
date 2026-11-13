@@ -2,7 +2,7 @@
 import { fontSize } from "@/constants";
 
 //import types
-import type { TextTheme } from "@/types/text-theme";
+import type { TextTheme } from "@/types/themes";
 
 // Build one theme entry while keeping font-family support centralized for future use.
 const createTextTheme = (fontSize: number, fontFamily?: string): TextTheme => ({
