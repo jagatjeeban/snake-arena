@@ -6,7 +6,7 @@ import { StyleSheet } from 'react-native';
 import { colors } from '@/constants';
 
 //import types
-import type { BottomSheetHostProps } from './types';
+import type { BottomSheetHostProps } from '@/types/components';
 
 /**
  * Hosts sheet content in the platform community bottom sheet.
