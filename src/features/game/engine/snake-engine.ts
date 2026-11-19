@@ -8,11 +8,11 @@ import {
 } from "./grid";
 
 //import types
-import {
+import { Direction } from "@/types/game";
+import type {
   Boundary,
   Coordinate,
   DifficultyConfig,
-  Direction,
   EngineState,
   PendingMove,
   TerminalReason,

@@ -9,8 +9,8 @@ import TextComponent from "./text-component";
 import { colors, fontWeight, strings } from "@/constants";
 
 //import types
-import { DifficultyLevel } from "@/types/game";
-import { SelectDifficultyProps } from "@/types/components";
+import type { DifficultyLevel } from "@/types/game";
+import type { SelectDifficultyProps } from "@/types/components";
 
 //import hooks
 import { useResponsive } from "@/hooks";

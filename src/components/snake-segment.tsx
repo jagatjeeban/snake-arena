@@ -13,7 +13,7 @@ import { segmentPosition } from "@/features/game/engine/movement-snapshot";
 
 //import types
 import { Direction } from "@/types/game";
-import type { SnakeSegmentProps } from "@/types/snake-segment";
+import type { SnakeSegmentProps } from "@/types/components";
 
 /**
  * Rotates the head's eyes toward the engine's current movement direction. It

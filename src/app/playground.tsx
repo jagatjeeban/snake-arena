@@ -7,7 +7,7 @@ import { Game } from "@/components";
 import { getDifficultyConfig } from "@/features/game/config";
 
 //import types
-import { DifficultyLevel } from "@/types/game";
+import type { DifficultyLevel } from "@/types/game";
 
 /**
  * Resolves the difficulty route parameter and hosts one playable game session.

@@ -3,7 +3,8 @@ import { CELL_SIZE } from "../config/geometry";
 import { SNAKE_STYLE } from "./style";
 
 //import types
-import { Direction, Coordinate, MovementSnapshot, RenderPoint } from "@/types/game";
+import { Direction } from "@/types/game";
+import type { Coordinate, MovementSnapshot, RenderPoint } from "@/types/game";
 
 /** Interpolates cell centers using the engine's existing clock. */
 export function movingCenter(

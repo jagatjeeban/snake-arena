@@ -61,7 +61,7 @@ import type {
   SessionEvents,
 } from "@/types/game";
 import { Direction } from "@/types/game";
-import { GameProps } from "@/types/components";
+import type { GameProps } from "@/types/components";
 
 /**
  * Owns the boundary between React lifecycle and the UI-thread game engine. It

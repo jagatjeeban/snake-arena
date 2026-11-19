@@ -12,8 +12,8 @@ import {
 } from "../src/features/game/engine/snake-engine";
 import { movementSnapshot } from "../src/features/game/engine/movement-snapshot";
 import { buildSnakeGeometry } from "../src/features/game/rendering/snake-geometry";
-import { Direction } from "../src/types/game/geometry";
-import type { EngineState } from "../src/types/game/engine";
+import { Direction } from "../src/types/game";
+import type { EngineState } from "../src/types/game";
 
 function engine(
   snake = [

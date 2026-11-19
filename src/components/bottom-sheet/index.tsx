@@ -4,7 +4,7 @@ import React from 'react';
 import BottomSheetHost from './host';
 
 //import types
-import type { BottomSheetProps } from './types';
+import type { BottomSheetProps } from '@/types/components';
 
 /**
  * Displays a controlled native bottom sheet using the platform-specific host.

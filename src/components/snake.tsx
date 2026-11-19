@@ -1,7 +1,7 @@
 import { memo } from "react";
 
 //import types
-import type { SnakeProps } from "@/types/snake";
+import type { SnakeProps } from "@/types/components";
 
 //import components
 import SnakeSegment from "./snake-segment";

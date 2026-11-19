@@ -7,7 +7,7 @@ import { StyleSheet, useWindowDimensions, View } from 'react-native';
 import { colors } from '@/constants';
 
 //import types
-import type { BottomSheetHostProps } from './types';
+import type { BottomSheetHostProps } from '@/types/components';
 
 /**
  * Hosts sheet content in SwiftUI with a true dismissal-completion callback.
@@ -64,6 +64,6 @@ const styles = StyleSheet.create({
     height: 5,
     marginBottom: 6,
     borderRadius: 3,
-    backgroundColor: colors.baseMediumGrey,
+    backgroundColor: colors.primary,
   },
 });

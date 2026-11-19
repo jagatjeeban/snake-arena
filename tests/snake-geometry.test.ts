@@ -9,9 +9,8 @@ import {
 } from "../src/features/game/rendering/snake-trail";
 import { SNAKE_STYLE } from "../src/features/game/rendering/style";
 import { CELL_SIZE } from "../src/features/game/config/geometry";
-import { Direction } from "../src/types/game/geometry";
-import type { Coordinate } from "../src/types/game/geometry";
-import type { MovementSnapshot } from "../src/types/game/engine";
+import { Direction } from "../src/types/game";
+import type { Coordinate, MovementSnapshot } from "../src/types/game";
 
 // Build the same transition shape used by the engine, including retained growth tails.
 function snapshot(

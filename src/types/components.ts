@@ -1,4 +1,4 @@
-import { ReactNode } from "react";
+import type { ReactNode } from "react";
 
 //import types
 import type { SharedValue } from "react-native-reanimated";

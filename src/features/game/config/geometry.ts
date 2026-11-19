@@ -1,5 +1,5 @@
 //import types
-import { Boundary } from "@/types/game";
+import type { Boundary } from "@/types/game";
 
 export const CELL_SIZE = 15;
 export const SNAKE_SEGMENT_SIZE = CELL_SIZE;

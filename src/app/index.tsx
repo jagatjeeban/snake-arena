@@ -1,7 +1,8 @@
 import { router } from "expo-router";
 import LottieView from "lottie-react-native";
 import { useMemo } from "react";
-import { StyleSheet, ViewStyle } from "react-native";
+import { StyleSheet } from "react-native";
+import type { ViewStyle } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 //import constants
@@ -14,7 +15,7 @@ import { useResponsive } from "@/hooks";
 import { SelectDifficulty, TextComponent } from "@/components";
 
 //import types
-import { DifficultyLevel } from "@/types/game";
+import type { DifficultyLevel } from "@/types/game";
 
 /**
  * Renders Snake Arena's landing screen and starts a game with the difficulty

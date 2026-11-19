@@ -1,5 +1,5 @@
 //import types
-import { DifficultyConfig, DifficultyLevel } from "@/types/game";
+import type { DifficultyConfig, DifficultyLevel } from "@/types/game";
 
 export const DIFFICULTY_CONFIGS = {
   easy: {
