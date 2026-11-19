@@ -10,7 +10,7 @@ import { buildSnakeGeometry } from "@/features/game/rendering/snake-geometry";
 import { buildSnakePaths } from "@/features/game/rendering/snake-path.native";
 
 //import types
-import type { SnakeProps } from "@/types/snake";
+import type { SnakeProps } from "@/types/components";
 
 /**
  * Draws every native snake layer from the same UI-thread frame. Capacity retains
